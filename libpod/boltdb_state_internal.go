@@ -15,6 +15,8 @@ import (
 	bolt "go.etcd.io/bbolt"
 )
 
+import "github.com/containers/podman/v4/pkg/timestamp"
+
 const (
 	idRegistryName    = "id-registry"
 	nameRegistryName  = "name-registry"
@@ -571,6 +573,8 @@ func (s *BoltState) getVolumeFromDB(name []byte, volume *Volume, volBkt *bolt.Bu
 // Add a container to the DB
 // If pod is not nil, the container is added to the pod as well
 func (s *BoltState) addContainer(ctr *Container, pod *Pod) error {
+	timestamp.Print(">BoltState.addContainer")
+	defer timestamp.Print("<BoltState.addContainer")
 	if s.namespace != "" && s.namespace != ctr.config.Namespace {
 		return fmt.Errorf("cannot add container %s as it is in namespace %q and we are in namespace %q: %w",
 			ctr.ID(), s.namespace, ctr.config.Namespace, define.ErrNSMismatch)
@@ -834,6 +838,8 @@ func (s *BoltState) addContainer(ctr *Container, pod *Pod) error {
 // If pod is not nil, the container is treated as belonging to a pod, and
 // will be removed from the pod as well
 func (s *BoltState) removeContainer(ctr *Container, pod *Pod, tx *bolt.Tx) error {
+	timestamp.Print(">BoltState.removeContainer")
+	defer timestamp.Print("<BoltState.removeContainer")
 	ctrID := []byte(ctr.ID())
 	ctrName := []byte(ctr.Name())
 

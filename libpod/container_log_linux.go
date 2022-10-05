@@ -18,6 +18,8 @@ import (
 	"github.com/sirupsen/logrus"
 )
 
+import "github.com/containers/podman/v4/pkg/timestamp"
+
 const (
 	// journaldLogOut is the journald priority signifying stdout
 	journaldLogOut = "6"
@@ -105,6 +107,7 @@ func (c *Container) readFromJournal(ctx context.Context, options *logs.LogOption
 			hundreds *= 2
 		}
 		if cursorError != nil {
+			timestamp.Print("readFromJournal sleeps")
 			time.Sleep(time.Duration(hundreds*100) * time.Millisecond)
 			continue
 		}

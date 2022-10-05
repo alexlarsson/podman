@@ -11,6 +11,8 @@ import (
 	"github.com/containers/podman/v4/pkg/domain/entities/reports"
 )
 
+import "github.com/containers/podman/v4/pkg/timestamp"
+
 // IsDir returns true if the specified path refers to a directory.
 func IsDir(path string) bool {
 	file, err := os.Stat(path)
@@ -113,6 +115,8 @@ func PrintNetworkPruneResults(networkPruneReport []*entities.NetworkPruneReport,
 //
 // Otherwise, IsCheckpointImage returns false with appropriate error.
 func IsCheckpointImage(ctx context.Context, namesOrIDs []string) (bool, error) {
+	timestamp.Print(">IsCheckpointImage()")
+	defer timestamp.Print("<IsCheckpointImage()")
 	inspectOpts := entities.InspectOptions{}
 	imgData, _, err := registry.ImageEngine().Inspect(ctx, namesOrIDs, inspectOpts)
 	if err != nil {

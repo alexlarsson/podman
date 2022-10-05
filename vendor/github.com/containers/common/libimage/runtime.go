@@ -19,6 +19,8 @@ import (
 	"github.com/sirupsen/logrus"
 )
 
+import "github.com/containers/podman/v4/pkg/timestamp"
+
 // Faster than the standard library, see https://github.com/json-iterator/go.
 var json = jsoniter.ConfigCompatibleWithStandardLibrary
 
@@ -217,6 +219,8 @@ var errNoHexValue = errors.New("invalid format: no 64-byte hexadecimal value")
 // If the specified name uses the `containers-storage` transport, the resolved
 // name is empty.
 func (r *Runtime) LookupImage(name string, options *LookupImageOptions) (*Image, string, error) {
+	timestamp.Print(fmt.Sprintf(">libimage.LookupImage(%s)", name))
+	defer timestamp.Print("<libimage.LookupImage()")
 	logrus.Debugf("Looking up image %q in local containers storage", name)
 
 	if options == nil {

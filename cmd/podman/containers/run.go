@@ -20,6 +20,8 @@ import (
 	"golang.org/x/term"
 )
 
+import "github.com/containers/podman/v4/pkg/timestamp"
+
 var (
 	runDescription = "Runs a command in a new container from the given image"
 	runCommand     = &cobra.Command{
@@ -109,6 +111,8 @@ func init() {
 }
 
 func run(cmd *cobra.Command, args []string) error {
+	timestamp.Print(">containers.run()")
+	defer timestamp.Print("<containers.run()")
 	if err := commonFlags(cmd); err != nil {
 		return err
 	}

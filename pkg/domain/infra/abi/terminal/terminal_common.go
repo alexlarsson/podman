@@ -16,6 +16,8 @@ import (
 	"golang.org/x/term"
 )
 
+import "github.com/containers/podman/v4/pkg/timestamp"
+
 // ExecAttachCtr execs and attaches to a container
 func ExecAttachCtr(ctx context.Context, ctr *libpod.Container, execConfig *libpod.ExecConfig, streams *define.AttachStreams) (int, error) {
 	var resizechan chan resize.TerminalSize
@@ -43,6 +45,8 @@ func ExecAttachCtr(ctx context.Context, ctr *libpod.Container, execConfig *libpo
 // if you change the signature of this function from os.File to io.Writer, it will trigger a downstream
 // error. we may need to just lint disable this one.
 func StartAttachCtr(ctx context.Context, ctr *libpod.Container, stdout, stderr, stdin *os.File, detachKeys string, sigProxy bool, startContainer bool) error { //nolint: interfacer
+	timestamp.Print(">StartAttachCtr")
+	defer timestamp.Print("<StartAttachCtr")
 	resize := make(chan resize.TerminalSize)
 
 	haveTerminal := term.IsTerminal(int(os.Stdin.Fd()))

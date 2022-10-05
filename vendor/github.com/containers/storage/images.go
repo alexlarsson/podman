@@ -16,6 +16,8 @@ import (
 	digest "github.com/opencontainers/go-digest"
 )
 
+import "github.com/containers/podman/v4/pkg/timestamp"
+
 const (
 	// ImageDigestManifestBigDataNamePrefix is a prefix of big data item
 	// names which we consider to be manifests, used for computing a
@@ -386,6 +388,8 @@ func (i *Image) recomputeDigests() error {
 // If !lockedForWriting and this function fails, the return value indicates whether
 // retrying with lockedForWriting could succeed.
 func (r *imageStore) load(lockedForWriting bool) (bool, error) {
+	timestamp.Print(">imageStore.load()")
+	defer timestamp.Print("<imageStore.load()")
 	rpath := r.imagespath()
 	data, err := os.ReadFile(rpath)
 	if err != nil && !os.IsNotExist(err) {

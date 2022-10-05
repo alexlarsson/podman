@@ -31,6 +31,8 @@ import (
 	"github.com/sirupsen/logrus"
 )
 
+import "github.com/containers/podman/v4/pkg/timestamp"
+
 type updateNameOperation int
 
 const (
@@ -626,6 +628,8 @@ type store struct {
 //	    return
 //	}
 func GetStore(options types.StoreOptions) (Store, error) {
+	timestamp.Print(">GetStore()")
+	defer timestamp.Print("<GetStore()")
 	defaultOpts, err := types.Options()
 	if err != nil {
 		return nil, err
@@ -797,6 +801,8 @@ func (s *store) GIDMap() []idtools.IDMap {
 }
 
 func (s *store) load() error {
+	timestamp.Print(">store.load() " + s.graphRoot)
+	defer timestamp.Print("<store.load()")
 	driver, err := s.GraphDriver()
 	if err != nil {
 		return err
@@ -900,6 +906,10 @@ func (s *store) getLayerStore() (rwLayerStore, error) {
 	if s.layerStore != nil {
 		return s.layerStore, nil
 	}
+
+	timestamp.Print(">store.getLayerStore()")
+	defer timestamp.Print("<store.getLayerStore()")
+
 	driver, err := s.getGraphDriver()
 	if err != nil {
 		return nil, err
@@ -1420,6 +1430,8 @@ func (s *store) imageTopLayerForMapping(image *Image, ristore roImageStore, prim
 }
 
 func (s *store) CreateContainer(id string, names []string, image, layer, metadata string, options *ContainerOptions) (*Container, error) {
+	timestamp.Print(">store.CreateContainer")
+	defer timestamp.Print("<store.CreateContainer")
 	if options == nil {
 		options = &ContainerOptions{}
 	}

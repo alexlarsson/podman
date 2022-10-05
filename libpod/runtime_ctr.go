@@ -30,6 +30,8 @@ import (
 	"github.com/sirupsen/logrus"
 )
 
+import "github.com/containers/podman/v4/pkg/timestamp"
+
 // Contains the public Runtime API for containers
 
 // A CtrCreateOption is a functional option which alters the Container created
@@ -242,6 +244,8 @@ func (r *Runtime) newContainer(ctx context.Context, rSpec *spec.Spec, options ..
 }
 
 func (r *Runtime) setupContainer(ctx context.Context, ctr *Container) (_ *Container, retErr error) {
+	timestamp.Print(">Runtime.setupContainer()")
+	defer timestamp.Print("<Runtime.setupContainer()")
 	// normalize the networks to names
 	// the db backend only knows about network names so we have to make
 	// sure we do not use ids internally
@@ -539,6 +543,7 @@ func (r *Runtime) setupContainer(ctx context.Context, ctr *Container) (_ *Contai
 		ctrNamedVolumes = append(ctrNamedVolumes, newVol)
 	}
 
+	// Go through named volumes and add them.
 	switch ctr.config.LogDriver {
 	case define.NoLogging, define.PassthroughLogging:
 		break
@@ -576,6 +581,7 @@ func (r *Runtime) setupContainer(ctx context.Context, ctr *Container) (_ *Contai
 		toLock.lock.Lock()
 		defer toLock.lock.Unlock()
 	}
+
 	// Add the container to the state
 	// TODO: May be worth looking into recovering from name/ID collisions here
 	if ctr.config.Pod != "" {
