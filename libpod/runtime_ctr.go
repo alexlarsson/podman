@@ -33,6 +33,8 @@ import (
 	"golang.org/x/exp/slices"
 )
 
+import "github.com/containers/podman/v5/pkg/timestamp"
+
 // Contains the public Runtime API for containers
 
 // A CtrCreateOption is a functional option which alters the Container created
@@ -246,6 +248,8 @@ func (r *Runtime) newContainer(ctx context.Context, rSpec *spec.Spec, options ..
 }
 
 func (r *Runtime) setupContainer(ctx context.Context, ctr *Container) (_ *Container, retErr error) {
+	timestamp.Print(">Runtime.setupContainer()")
+	defer timestamp.Print("<Runtime.setupContainer()")
 	// normalize the networks to names
 	// the db backend only knows about network names so we have to make
 	// sure we do not use ids internally

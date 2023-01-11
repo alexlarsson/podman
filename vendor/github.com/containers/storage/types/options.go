@@ -17,6 +17,8 @@ import (
 	"github.com/sirupsen/logrus"
 )
 
+import "github.com/containers/podman/v5/pkg/timestamp"
+
 // TOML-friendly explicit tables used for conversions.
 type TomlConfig struct {
 	Storage struct {
@@ -391,6 +393,8 @@ func ReloadConfigurationFileIfNeeded(configFile string, storeOptions *StoreOptio
 	if err != nil {
 		return err
 	}
+
+	timestamp.Print("Loading " + configFile)
 
 	mtime := fi.ModTime()
 	if prevReloadConfig.storeOptions != nil && prevReloadConfig.mod == mtime && prevReloadConfig.configFile == configFile {

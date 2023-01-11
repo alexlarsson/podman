@@ -21,6 +21,8 @@ import (
 	"golang.org/x/sys/unix"
 )
 
+import "github.com/containers/podman/v5/pkg/timestamp"
+
 // ExecConfig contains the configuration of an exec session
 type ExecConfig struct {
 	// Command is the command that will be invoked in the exec session.
@@ -850,6 +852,7 @@ func (c *Container) cleanupExecBundle(sessionID string) (err error) {
 					}
 					c.lock.Unlock()
 				}
+				timestamp.Print("cleanupExecBundle sleeps")
 				time.Sleep(time.Millisecond * 100)
 				if !c.batched {
 					c.lock.Lock()

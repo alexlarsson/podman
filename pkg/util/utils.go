@@ -34,6 +34,8 @@ import (
 	"golang.org/x/term"
 )
 
+import "github.com/containers/podman/v5/pkg/timestamp"
+
 // The flags that an [ug]id mapping can have
 type idMapFlags struct {
 	Extends  bool // The "+" flag
@@ -44,6 +46,8 @@ type idMapFlags struct {
 var containerConfig *config.Config
 
 func init() {
+	timestamp.Print(">init() - pkg.Util")
+	timestamp.Print("<init() - pkg.Util")
 	var err error
 	containerConfig, err = config.Default()
 	if err != nil {

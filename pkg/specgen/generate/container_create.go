@@ -27,10 +27,14 @@ import (
 	"tags.cncf.io/container-device-interface/pkg/parser"
 )
 
+import "github.com/containers/podman/v5/pkg/timestamp"
+
 // MakeContainer creates a container based on the SpecGenerator.
 // Returns the created, container and any warnings resulting from creating the
 // container, or an error.
 func MakeContainer(ctx context.Context, rt *libpod.Runtime, s *specgen.SpecGenerator, clone bool, c *libpod.Container) (*specs.Spec, *specgen.SpecGenerator, []libpod.CtrCreateOption, error) {
+	timestamp.Print(">specgen.MakeContainer()")
+	defer timestamp.Print("<specgen.MakeContainer()")
 	rtc, err := rt.GetConfigNoCopy()
 	if err != nil {
 		return nil, nil, nil, err
@@ -313,11 +317,14 @@ func MakeContainer(ctx context.Context, rt *libpod.Runtime, s *specgen.SpecGener
 	return runtimeSpec, s, options, err
 }
 func ExecuteCreate(ctx context.Context, rt *libpod.Runtime, runtimeSpec *specs.Spec, s *specgen.SpecGenerator, infra bool, options ...libpod.CtrCreateOption) (*libpod.Container, error) {
+	timestamp.Print(">specgen.ExecuteCreate()")
+	defer timestamp.Print("<specgen.ExecuteCreate()")
 	ctr, err := rt.NewContainer(ctx, runtimeSpec, s, infra, options...)
 	if err != nil {
 		return ctr, err
 	}
 
+	defer timestamp.Print("specgen.ExecuteCreate() -> PrepareVolumeOnCreateContainer")
 	return ctr, rt.PrepareVolumeOnCreateContainer(ctx, ctr)
 }
 

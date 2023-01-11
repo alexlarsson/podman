@@ -59,6 +59,8 @@ import (
 	cdi "tags.cncf.io/container-device-interface/pkg/cdi"
 )
 
+import "github.com/containers/podman/v5/pkg/timestamp"
+
 func parseOptionIDs(ctrMappings []idtools.IDMap, option string) ([]idtools.IDMap, error) {
 	ranges := strings.Split(option, "#")
 	ret := make([]idtools.IDMap, len(ranges))
@@ -177,6 +179,8 @@ func getOverlayUpperAndWorkDir(options []string) (string, string, error) {
 // Generate spec for a container
 // Accepts a map of the container's dependencies
 func (c *Container) generateSpec(ctx context.Context) (s *spec.Spec, cleanupFuncRet func(), err error) {
+	timestamp.Print(">Container.generateSpec()")
+	defer timestamp.Print("<Container.generateSpec()")
 	var safeMounts []*safeMountInfo
 	// lock the thread so that the current thread will be kept alive until the mounts are used
 	runtime.LockOSThread()

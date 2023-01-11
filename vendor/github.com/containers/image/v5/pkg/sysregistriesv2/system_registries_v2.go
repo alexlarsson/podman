@@ -19,6 +19,8 @@ import (
 	"golang.org/x/exp/maps"
 )
 
+import "github.com/containers/podman/v5/pkg/timestamp"
+
 // systemRegistriesConfPath is the path to the system-wide registry
 // configuration file and is used to add/subtract potential registries for
 // obtaining images.  You can override this at build time with
@@ -923,6 +925,8 @@ func findRegistryWithParsedConfig(config *parsedConfig, ref string) (*Registry, 
 // loadConfigFile loads and unmarshals a single config file.
 // Use forceV2 if the config must in the v2 format.
 func loadConfigFile(path string, forceV2 bool) (*parsedConfig, error) {
+	timestamp.Print(">Loading registries configuration " + path)
+	defer timestamp.Print("<Loading registries configuration " + path)
 	logrus.Debugf("Loading registries configuration %q", path)
 
 	// tomlConfig allows us to unmarshal either V1 or V2 simultaneously.

@@ -17,6 +17,8 @@ import (
 	bolt "go.etcd.io/bbolt"
 )
 
+import "github.com/containers/podman/v5/pkg/timestamp"
+
 const (
 	idRegistryName    = "id-registry"
 	nameRegistryName  = "name-registry"
@@ -612,6 +614,8 @@ func (s *BoltState) getVolumeFromDB(name []byte, volume *Volume, volBkt *bolt.Bu
 // Add a container to the DB
 // If pod is not nil, the container is added to the pod as well
 func (s *BoltState) addContainer(ctr *Container, pod *Pod) error {
+	timestamp.Print(">BoltState.addContainer")
+	defer timestamp.Print("<BoltState.addContainer")
 	// Set the original networks to nil. We can save some space by not storing it in the config
 	// since we store it in a different mutable bucket anyway.
 	configNetworks := ctr.config.Networks
@@ -831,6 +835,8 @@ func (s *BoltState) addContainer(ctr *Container, pod *Pod) error {
 // If pod is not nil, the container is treated as belonging to a pod, and
 // will be removed from the pod as well
 func (s *BoltState) removeContainer(ctr *Container, pod *Pod, tx *bolt.Tx) error {
+	timestamp.Print(">BoltState.removeContainer")
+	defer timestamp.Print("<BoltState.removeContainer")
 	ctrID := []byte(ctr.ID())
 	ctrName := []byte(ctr.Name())
 

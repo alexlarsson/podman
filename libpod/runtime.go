@@ -45,6 +45,8 @@ import (
 	"github.com/sirupsen/logrus"
 )
 
+import "github.com/containers/podman/v5/pkg/timestamp"
+
 // Set up the JSON library for all of Libpod
 var json = jsoniter.ConfigCompatibleWithStandardLibrary
 
@@ -179,6 +181,8 @@ func NewRuntimeFromConfig(ctx context.Context, userConfig *config.Config, option
 }
 
 func newRuntimeFromConfig(ctx context.Context, conf *config.Config, options ...RuntimeOption) (*Runtime, error) {
+	timestamp.Print(">newRuntimeFromConfig()")
+	defer timestamp.Print("<newRuntimeFromConfig()")
 	runtime := new(Runtime)
 
 	if conf.Engine.OCIRuntime == "" {
@@ -334,12 +338,15 @@ func getDBState(runtime *Runtime) (State, error) {
 // Make a new runtime based on the given configuration
 // Sets up containers/storage, state store, OCI runtime
 func makeRuntime(ctx context.Context, runtime *Runtime) (retErr error) {
+	timestamp.Print(">runtime.makeRuntime()")
+	defer timestamp.Print("<runtime.makeRuntime()")
 	// Find a working conmon binary
 	cPath, err := runtime.config.FindConmon()
 	if err != nil {
 		return err
 	}
 	runtime.conmonPath = cPath
+	timestamp.Print("runtime.makeRuntime()- conmon is: " + cPath)
 
 	if runtime.config.Engine.StaticDir == "" {
 		runtime.config.Engine.StaticDir = filepath.Join(runtime.storageConfig.GraphRoot, "libpod")

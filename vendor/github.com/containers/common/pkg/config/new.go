@@ -14,6 +14,8 @@ import (
 	"github.com/sirupsen/logrus"
 )
 
+import "github.com/containers/podman/v5/pkg/timestamp"
+
 var (
 	cachedConfigError error
 	cachedConfigMutex sync.Mutex
@@ -67,6 +69,9 @@ func Default() (*Config, error) {
 // A helper function for New() expecting the caller to hold the
 // cachedConfigMutex if options.SetDefault is set..
 func newLocked(options *Options) (*Config, error) {
+	timestamp.Print(">config.newLocked")
+	defer timestamp.Print("<config.newLocked")
+
 	// Start with the built-in defaults
 	config, err := defaultConfig()
 	if err != nil {

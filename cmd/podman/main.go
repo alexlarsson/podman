@@ -33,7 +33,11 @@ import (
 	"golang.org/x/term"
 )
 
+import "github.com/containers/podman/v5/pkg/timestamp"
+
 func main() {
+	timestamp.Print("podman main(): " + strings.Join(os.Args, " "))
+
 	if reexec.Init() {
 		// We were invoked with a different argv[0] indicating that we
 		// had a specific job to do as a subprocess, and it's done.

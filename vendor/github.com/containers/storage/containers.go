@@ -17,6 +17,8 @@ import (
 	"github.com/sirupsen/logrus"
 )
 
+import "github.com/containers/podman/v5/pkg/timestamp"
+
 type containerLocations uint8
 
 // The backing store is split in two json files, one (the volatile)
@@ -452,6 +454,8 @@ func (r *containerStore) datapath(id, key string) string {
 // If !lockedForWriting and this function fails, the return value indicates whether
 // retrying with lockedForWriting could succeed.
 func (r *containerStore) load(lockedForWriting bool) (bool, error) {
+	timestamp.Print(">containerStore.load()")
+	defer timestamp.Print("<containerStore.load()")
 	var modifiedLocations containerLocations
 	containers := []*Container{}
 

@@ -25,6 +25,8 @@ import (
 	"golang.org/x/sys/unix"
 )
 
+import "github.com/containers/podman/v5/pkg/timestamp"
+
 // ExecContainer executes a command in a running container
 func (r *ConmonOCIRuntime) ExecContainer(c *Container, sessionID string, options *ExecOptions, streams *define.AttachStreams, newSize *resize.TerminalSize) (int, chan error, error) {
 	if options == nil {
@@ -50,6 +52,7 @@ func (r *ConmonOCIRuntime) ExecContainer(c *Container, sessionID string, options
 		ociLog = c.execOCILog(sessionID)
 	}
 
+	timestamp.Print("Starting conmon")
 	execCmd, pipes, err := r.startExec(c, sessionID, options, attachStdin, ociLog)
 	if err != nil {
 		return -1, nil, err

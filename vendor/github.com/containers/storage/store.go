@@ -33,6 +33,8 @@ import (
 	"github.com/sirupsen/logrus"
 )
 
+import "github.com/containers/podman/v5/pkg/timestamp"
+
 type updateNameOperation int
 
 const (
@@ -766,6 +768,8 @@ type store struct {
 //	    return
 //	}
 func GetStore(options types.StoreOptions) (Store, error) {
+	timestamp.Print(">GetStore()")
+	defer timestamp.Print("<GetStore()")
 	defaultOpts, err := types.Options()
 	if err != nil {
 		return nil, err
@@ -943,6 +947,8 @@ func (s *store) GIDMap() []idtools.IDMap {
 
 // This must only be called when constructing store; it writes to fields that are assumed to be constant after construction.
 func (s *store) load() error {
+	timestamp.Print(">store.load() " + s.graphRoot)
+	defer timestamp.Print("<store.load()")
 	var driver drivers.Driver
 	if err := func() error { // A scope for defer
 		s.graphLock.Lock()
@@ -1762,6 +1768,8 @@ func (s *store) imageTopLayerForMapping(image *Image, ristore roImageStore, rlst
 }
 
 func (s *store) CreateContainer(id string, names []string, image, layer, metadata string, cOptions *ContainerOptions) (*Container, error) {
+	timestamp.Print(">store.CreateContainer")
+	defer timestamp.Print("<store.CreateContainer")
 	var options ContainerOptions
 	if cOptions != nil {
 		options = *cOptions

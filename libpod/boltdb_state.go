@@ -20,6 +20,8 @@ import (
 	bolt "go.etcd.io/bbolt"
 )
 
+import "github.com/containers/podman/v5/pkg/timestamp"
+
 // BoltState is a state implementation backed by a Bolt DB
 type BoltState struct {
 	valid   bool
@@ -73,6 +75,8 @@ type BoltState struct {
 
 // NewBoltState creates a new bolt-backed state database
 func NewBoltState(path string, runtime *Runtime) (State, error) {
+	timestamp.Print(">NewBoltState(" + path + ")")
+	defer timestamp.Print("<NewBoltState(" + path + ")")
 	logrus.Info("Using boltdb as database backend")
 	state := new(BoltState)
 	state.dbPath = path
@@ -846,6 +850,8 @@ func (s *BoltState) UpdateContainer(ctr *Container) error {
 
 // SaveContainer saves a container's current state in the database
 func (s *BoltState) SaveContainer(ctr *Container) error {
+	timestamp.Print(">BoltState.SaveContainer")
+	defer timestamp.Print("<BoltState.SaveContainer")
 	if !s.valid {
 		return define.ErrDBClosed
 	}

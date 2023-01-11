@@ -30,6 +30,8 @@ import (
 	"github.com/sirupsen/logrus"
 )
 
+import "github.com/containers/podman/v5/pkg/timestamp"
+
 // PullOptions allows for customizing image pulls.
 type PullOptions struct {
 	CopyOptions
@@ -54,6 +56,8 @@ type PullOptions struct {
 // and no local image has been found.  This allows for an easier integration
 // into some users of this package (e.g., Buildah).
 func (r *Runtime) Pull(ctx context.Context, name string, pullPolicy config.PullPolicy, options *PullOptions) (_ []*Image, pullError error) {
+	timestamp.Print(fmt.Sprintf(">libimage.Pull(%s)", name))
+	defer timestamp.Print("<libimage.Pull()")
 	logrus.Debugf("Pulling image %s (policy: %s)", name, pullPolicy)
 	if r.eventChannel != nil {
 		defer func() {
@@ -406,6 +410,8 @@ func (r *Runtime) copyFromDockerArchiveReaderReference(ctx context.Context, read
 //
 // If options.All is set, all tags from the specified registry will be pulled.
 func (r *Runtime) copyFromRegistry(ctx context.Context, ref types.ImageReference, inputName string, pullPolicy config.PullPolicy, options *PullOptions) ([]string, error) {
+	timestamp.Print(fmt.Sprintf(">libimage.copyFromRegistry()"))
+	defer timestamp.Print("<libimage.copyFromRegistry()")
 	// Sanity check.
 	if err := pullPolicy.Validate(); err != nil {
 		return nil, err

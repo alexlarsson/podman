@@ -20,6 +20,8 @@ import (
 	"github.com/sirupsen/logrus"
 )
 
+import "github.com/containers/podman/v5/pkg/timestamp"
+
 const (
 	// _defaultGraphRoot points to the default path of the graph root.
 	_defaultGraphRoot = "/var/lib/containers/storage"
@@ -189,6 +191,8 @@ const (
 // to the current host only. It does not read any config files from the host or
 // the environment.
 func defaultConfig() (*Config, error) {
+	timestamp.Print(">defaultConfig()")
+	defer timestamp.Print("<defaultConfig()")
 	defaultEngineConfig, err := defaultEngineConfig()
 	if err != nil {
 		return nil, err
