@@ -12,6 +12,7 @@ import (
 	"github.com/godbus/dbus/v5"
 	"github.com/sirupsen/logrus"
 	"go.podman.io/common/pkg/cgroups"
+	"go.podman.io/podman/v6/pkg/timestamp"
 	"go.podman.io/storage/pkg/unshare"
 )
 
@@ -100,6 +101,7 @@ func MovePauseProcessToScope(pausePidPath string) {
 
 // RunUnderSystemdScope adds the specified pid to a systemd scope.
 func RunUnderSystemdScope(pid int, slice string, unitName string) error {
+	defer timestamp.Start("RunUnderSystemdScope " + unitName)()
 	var conn *systemdDbus.Conn
 	var err error
 

@@ -18,6 +18,7 @@ import (
 	"go.podman.io/podman/v6/libpod/define"
 	"go.podman.io/podman/v6/libpod/events"
 	"go.podman.io/podman/v6/pkg/pidhandle"
+	"go.podman.io/podman/v6/pkg/timestamp"
 	"go.podman.io/storage/pkg/stringid"
 	"golang.org/x/sys/unix"
 )
@@ -854,6 +855,7 @@ func (c *Container) cleanupExecBundle(sessionID string) (err error) {
 		}
 		// retry the removal on ENOTEMPTY/EBUSY after a short sleep
 		if errors.Is(err, unix.ENOTEMPTY) || errors.Is(err, unix.EBUSY) {
+			timestamp.Print("cleanupExecBundle sleeps")
 			time.Sleep(time.Millisecond * 50)
 			continue
 		}

@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"sync"
 
+	"go.podman.io/podman/v6/pkg/timestamp"
 	"go.podman.io/storage/pkg/configfile"
 	"go.podman.io/storage/pkg/unshare"
 )
@@ -66,6 +67,7 @@ func Default() (*Config, error) {
 // A helper function for New() expecting the caller to hold the
 // cachedConfigMutex if options.SetDefault is set..
 func newLocked(options *Options, file *configfile.File) (*Config, error) {
+	defer timestamp.Start("config.newLocked")()
 	// Start with the built-in defaults
 	config, err := defaultConfig()
 	if err != nil {

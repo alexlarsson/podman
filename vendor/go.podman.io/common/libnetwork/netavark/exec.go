@@ -12,6 +12,7 @@ import (
 	"strings"
 
 	"github.com/sirupsen/logrus"
+	"go.podman.io/podman/v6/pkg/timestamp"
 )
 
 type netavarkError struct {
@@ -102,6 +103,7 @@ func (n *netavarkNetwork) execNetavark(args []string, needPlugin bool, stdin, re
 }
 
 func (n *netavarkNetwork) execBinary(path string, args []string, stdin, result any, env []string) error {
+	defer timestamp.Start("netavark.execBinary(" + path + ")")()
 	stdinR, stdinW, err := os.Pipe()
 	if err != nil {
 		return newNetavarkError("failed to create stdin pipe", err)
@@ -132,6 +134,8 @@ func (n *netavarkNetwork) execBinary(path string, args []string, stdin, result a
 		// connect logrus to stderr as well so that the logs will be written to the syslog as well
 		logWriter = io.MultiWriter(logWriter, &logrusNetavarkWriter{})
 	}
+	logWriter, flush := timestamp.LogWriter("netavark", logWriter)
+	defer flush()
 
 	cmd := exec.Command(path, args...)
 	// connect the pipes to stdin and stdout
@@ -144,6 +148,7 @@ func (n *netavarkNetwork) execBinary(path string, args []string, stdin, result a
 	if err != nil {
 		return newNetavarkError("failed to start process", err)
 	}
+	timestamp.Print("netavark: process started")
 	err = json.NewEncoder(stdinW).Encode(stdin)
 	// we have to close stdinW so netavark gets the EOF and does not hang forever
 	stdinW.Close()
@@ -151,10 +156,12 @@ func (n *netavarkNetwork) execBinary(path string, args []string, stdin, result a
 	if err != nil {
 		return newNetavarkError("failed to encode stdin data", err)
 	}
+	timestamp.Print("netavark: input sent; waiting for process exit")
 
 	dec := json.NewDecoder(stdoutR)
 
 	err = cmd.Wait()
+	timestamp.Print("netavark: process wait returned")
 	// we have to close stdoutW so we can decode the json without hanging forever
 	stdoutW.Close()
 	stdoutWClosed = true

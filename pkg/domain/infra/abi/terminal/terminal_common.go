@@ -12,6 +12,7 @@ import (
 	"go.podman.io/common/pkg/resize"
 	"go.podman.io/podman/v6/libpod"
 	"go.podman.io/podman/v6/libpod/define"
+	"go.podman.io/podman/v6/pkg/timestamp"
 	"golang.org/x/term"
 )
 
@@ -42,6 +43,7 @@ func ExecAttachCtr(ctx context.Context, ctr *libpod.Container, execConfig *libpo
 // if you change the signature of this function from os.File to io.Writer, it will trigger a downstream
 // error. we may need to just lint disable this one.
 func StartAttachCtr(ctx context.Context, ctr *libpod.Container, stdout, stderr, stdin *os.File, detachKeys string, sigProxy bool, startContainer bool) error {
+	defer timestamp.Start("StartAttachCtr")()
 	resize := make(chan resize.TerminalSize)
 
 	haveTerminal := term.IsTerminal(int(os.Stdin.Fd()))

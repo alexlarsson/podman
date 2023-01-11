@@ -34,6 +34,7 @@ import (
 	"go.podman.io/podman/v6/pkg/specgen"
 	"go.podman.io/podman/v6/pkg/specgen/generate"
 	"go.podman.io/podman/v6/pkg/specgenutil"
+	"go.podman.io/podman/v6/pkg/timestamp"
 	"go.podman.io/podman/v6/pkg/util"
 	"go.podman.io/storage"
 	"go.podman.io/storage/pkg/unshare"
@@ -1178,6 +1179,7 @@ func (ic *ContainerEngine) Diff(_ context.Context, namesOrIDs []string, opts ent
 }
 
 func (ic *ContainerEngine) ContainerRun(ctx context.Context, opts entities.ContainerRunOptions) (*entities.ContainerRunReport, error) {
+	defer timestamp.Start("ContainerEngine().ContainerRun()")()
 	removeContainer := func(ctr *libpod.Container, force bool) error {
 		var timeout *uint
 		if err := ic.Libpod.RemoveContainer(ctx, ctr, force, true, timeout); err != nil {
@@ -1238,6 +1240,7 @@ func (ic *ContainerEngine) ContainerRun(ctx context.Context, opts entities.Conta
 	}
 
 	// if the container was created as part of a pod, also start its dependencies, if any.
+	timestamp.Print("ContainerRun() -> StartAttachCtr()")
 	if err := terminal.StartAttachCtr(ctx, ctr, opts.OutputStream, opts.ErrorStream, opts.InputStream, opts.DetachKeys, opts.SigProxy, true); err != nil {
 		// We've manually detached from the container
 		// Do not perform cleanup, or wait for container exit code
@@ -1257,6 +1260,7 @@ func (ic *ContainerEngine) ContainerRun(ctx context.Context, opts entities.Conta
 		report.ExitCode = define.ExitCode(err)
 		return &report, err
 	}
+	timestamp.Print("ContainerRun() -> ContainerWaitForExitCode()")
 	report.ExitCode, _ = ic.ContainerWaitForExitCode(ctx, ctr)
 	if opts.Rm && !ctr.ShouldRestart(ctx) {
 		if err := removeContainer(ctr, false); err != nil {

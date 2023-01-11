@@ -11,6 +11,7 @@ import (
 	godbus "github.com/godbus/dbus/v5"
 	"github.com/sirupsen/logrus"
 	"go.podman.io/podman/v6/pkg/rootless"
+	"go.podman.io/podman/v6/pkg/timestamp"
 )
 
 // IsSystemdSessionValid checks if sessions is valid for provided rootless uid.
@@ -22,6 +23,8 @@ func IsSystemdSessionValid(uid int) bool {
 	dbusDest := "org.freedesktop.login1"
 	dbusInterface := "org.freedesktop.login1.Manager"
 	dbusPath := "/org/freedesktop/login1"
+
+	defer timestamp.Start("IsSystemdSessionValid()")()
 
 	if rootless.IsRootless() {
 		conn, err = GetLogindConnection(rootless.GetRootlessUID())

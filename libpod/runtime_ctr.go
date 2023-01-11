@@ -27,6 +27,7 @@ import (
 	"go.podman.io/podman/v6/pkg/domain/entities/reports"
 	"go.podman.io/podman/v6/pkg/rootless"
 	"go.podman.io/podman/v6/pkg/specgen"
+	"go.podman.io/podman/v6/pkg/timestamp"
 	"go.podman.io/podman/v6/pkg/util"
 	"go.podman.io/storage"
 	"go.podman.io/storage/pkg/stringid"
@@ -242,6 +243,7 @@ func (r *Runtime) newContainer(ctx context.Context, rSpec *spec.Spec, options ..
 }
 
 func (r *Runtime) setupContainer(ctx context.Context, ctr *Container) (_ *Container, retErr error) {
+	defer timestamp.Start("Runtime.setupContainer()")()
 	if ctr.IsDefaultInfra() || ctr.IsService() {
 		err := ctr.createInitRootfs()
 		if err != nil {

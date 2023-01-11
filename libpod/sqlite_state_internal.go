@@ -15,6 +15,7 @@ import (
 	"github.com/sirupsen/logrus"
 	"go.podman.io/common/libnetwork/types"
 	"go.podman.io/podman/v6/libpod/define"
+	"go.podman.io/podman/v6/pkg/timestamp"
 	"go.podman.io/storage/pkg/fileutils"
 
 	// SQLite backend for database/sql
@@ -40,6 +41,7 @@ func checkSQLiteDBExists(runtime *Runtime) bool {
 }
 
 func initSQLiteDB(conn *sql.DB) (defErr error) {
+	defer timestamp.Start("initSQLiteDB()")()
 	// Start with a transaction to avoid "database locked" errors.
 	// See https://github.com/mattn/go-sqlite3/issues/274#issuecomment-1429054597
 	tx, err := conn.Begin()
@@ -409,15 +411,18 @@ func (s *SQLiteState) rewriteContainerConfig(ctr *Container, newCfg *ContainerCo
 }
 
 func (s *SQLiteState) addContainer(ctr *Container) (defErr error) {
+	defer timestamp.Start("SQLiteState.addContainer")()
 	configJSON, err := json.Marshal(ctr.config)
 	if err != nil {
 		return fmt.Errorf("marshalling container config json: %w", err)
 	}
+	timestamp.Print("SQLiteState.addContainer: config JSON marshalled")
 
 	stateJSON, err := json.Marshal(ctr.state)
 	if err != nil {
 		return fmt.Errorf("marshalling container state json: %w", err)
 	}
+	timestamp.Print("SQLiteState.addContainer: JSON marshalled")
 	deps := ctr.Dependencies()
 
 	podID := sql.NullString{}
@@ -430,6 +435,7 @@ func (s *SQLiteState) addContainer(ctr *Container) (defErr error) {
 	if err != nil {
 		return fmt.Errorf("beginning container create transaction: %w", err)
 	}
+	timestamp.Print("SQLiteState.addContainer: transaction acquired")
 	defer func() {
 		if defErr != nil {
 			if err := tx.Rollback(); err != nil {
@@ -499,6 +505,7 @@ func (s *SQLiteState) addContainer(ctr *Container) (defErr error) {
 
 // removeContainer remove the specified container from the database.
 func (s *SQLiteState) removeContainer(ctr *Container) (defErr error) {
+	defer timestamp.Start("SQLiteState.removeContainer")()
 	tx, err := s.conn.Begin()
 	if err != nil {
 		return fmt.Errorf("beginning container %s removal transaction: %w", ctr.ID(), err)

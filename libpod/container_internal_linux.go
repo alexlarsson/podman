@@ -26,6 +26,7 @@ import (
 	"go.podman.io/podman/v6/libpod/define"
 	"go.podman.io/podman/v6/libpod/shutdown"
 	"go.podman.io/podman/v6/pkg/rootless"
+	"go.podman.io/podman/v6/pkg/timestamp"
 	"golang.org/x/sys/unix"
 )
 
@@ -58,6 +59,7 @@ func (c *Container) unmountSHM(mount string) error {
 // prepare mounts the container and sets up other required resources like net
 // namespaces
 func (c *Container) prepare() error {
+	defer timestamp.Start("Container.prepare()")()
 	var (
 		wg                              sync.WaitGroup
 		netNS                           string
@@ -122,6 +124,7 @@ func (c *Container) prepare() error {
 		logrus.Debugf("Created root filesystem for container %s at %s", c.ID(), c.state.Mountpoint)
 	}()
 
+	timestamp.Print("Container.prepare() - wait for mount/network setup")
 	wg.Wait()
 
 	var createErr error

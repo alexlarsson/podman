@@ -11,6 +11,7 @@ import (
 
 	digest "github.com/opencontainers/go-digest"
 	"github.com/sirupsen/logrus"
+	"go.podman.io/podman/v6/pkg/timestamp"
 	"go.podman.io/storage/pkg/idtools"
 	"go.podman.io/storage/pkg/ioutils"
 	"go.podman.io/storage/pkg/lockfile"
@@ -456,6 +457,7 @@ func (r *containerStore) datapath(id, key string) string {
 // If !lockedForWriting and this function fails, the return value indicates whether
 // retrying with lockedForWriting could succeed.
 func (r *containerStore) load(lockedForWriting bool) (bool, error) {
+	defer timestamp.Start("containerStore.load()")()
 	var modifiedLocations containerLocations
 	containers := []*Container{}
 

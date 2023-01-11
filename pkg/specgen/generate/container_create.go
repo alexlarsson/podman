@@ -23,6 +23,7 @@ import (
 	"go.podman.io/podman/v6/pkg/rootless"
 	"go.podman.io/podman/v6/pkg/specgen"
 	"go.podman.io/podman/v6/pkg/specgenutil"
+	"go.podman.io/podman/v6/pkg/timestamp"
 	"go.podman.io/podman/v6/pkg/util"
 	"tags.cncf.io/container-device-interface/pkg/parser"
 )
@@ -31,6 +32,7 @@ import (
 // Returns the created, container and any warnings resulting from creating the
 // container, or an error.
 func MakeContainer(ctx context.Context, rt *libpod.Runtime, s *specgen.SpecGenerator, clone bool, c *libpod.Container) (*specs.Spec, *specgen.SpecGenerator, []libpod.CtrCreateOption, error) {
+	defer timestamp.Start("specgen.MakeContainer()")()
 	rtc, err := rt.GetConfigNoCopy()
 	if err != nil {
 		return nil, nil, nil, err
@@ -327,11 +329,13 @@ func MakeContainer(ctx context.Context, rt *libpod.Runtime, s *specgen.SpecGener
 }
 
 func ExecuteCreate(ctx context.Context, rt *libpod.Runtime, runtimeSpec *specs.Spec, s *specgen.SpecGenerator, infra bool, options ...libpod.CtrCreateOption) (*libpod.Container, error) {
+	defer timestamp.Start("specgen.ExecuteCreate()")()
 	ctr, err := rt.NewContainer(ctx, runtimeSpec, s, infra, options...)
 	if err != nil {
 		return ctr, err
 	}
 
+	defer timestamp.Print("specgen.ExecuteCreate() -> PrepareVolumeOnCreateContainer")
 	return ctr, rt.PrepareVolumeOnCreateContainer(ctx, ctr)
 }
 

@@ -11,6 +11,7 @@ import (
 	"go.podman.io/podman/v6/libpod/define"
 	"go.podman.io/podman/v6/pkg/domain/entities"
 	"go.podman.io/podman/v6/pkg/domain/entities/reports"
+	"go.podman.io/podman/v6/pkg/timestamp"
 )
 
 // IsDir returns true if the specified path refers to a directory.
@@ -115,6 +116,7 @@ func PrintNetworkPruneResults(networkPruneReport []*entities.NetworkPruneReport,
 //
 // Otherwise, IsCheckpointImage returns false with appropriate error.
 func IsCheckpointImage(ctx context.Context, namesOrIDs []string) (bool, error) {
+	defer timestamp.Start("IsCheckpointImage()")()
 	inspectOpts := entities.InspectOptions{}
 	imgData, _, err := registry.ImageEngine().Inspect(ctx, namesOrIDs, inspectOpts)
 	if err != nil {

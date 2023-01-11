@@ -17,6 +17,7 @@ import (
 	"go.podman.io/common/libnetwork/types"
 	"go.podman.io/common/pkg/config"
 	"go.podman.io/podman/v6/libpod/define"
+	"go.podman.io/podman/v6/pkg/timestamp"
 	"go.podman.io/storage"
 )
 
@@ -54,6 +55,7 @@ const (
 
 // NewSqliteState creates a new SQLite-backed state database.
 func NewSqliteState(runtime *Runtime) (_ State, defErr error) {
+	defer timestamp.Start("NewSqliteState()")()
 	logrus.Info("Using sqlite as database backend")
 	state := new(SQLiteState)
 
@@ -719,6 +721,7 @@ func (s *SQLiteState) UpdateContainer(ctr *Container) error {
 
 // SaveContainer saves a container's current state in the database
 func (s *SQLiteState) SaveContainer(ctr *Container) (defErr error) {
+	defer timestamp.Start("SQLiteState.SaveContainer")()
 	if !s.valid {
 		return define.ErrDBClosed
 	}
@@ -780,6 +783,7 @@ func (s *SQLiteState) ContainerInUse(ctr *Container) (_ []string, defErr error) 
 	if err != nil {
 		return nil, fmt.Errorf("beginning transaction to retrieve container dependents: %w", err)
 	}
+	timestamp.Print("SQLiteState.ContainerInUse: transaction acquired")
 	defer func() {
 		if defErr != nil {
 			if err := tx.Rollback(); err != nil {
@@ -990,6 +994,7 @@ func (s *SQLiteState) AddContainerExitCode(id string, exitCode int32) (defErr er
 	if err := tx.Commit(); err != nil {
 		return fmt.Errorf("committing transaction to add exit code: %w", err)
 	}
+	timestamp.Print("SQLiteState.AddContainerExitCode: transaction committed")
 
 	return nil
 }

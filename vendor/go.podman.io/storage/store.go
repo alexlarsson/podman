@@ -23,6 +23,7 @@ import (
 	digest "github.com/opencontainers/go-digest"
 	"github.com/opencontainers/selinux/go-selinux/label"
 	"github.com/sirupsen/logrus"
+	"go.podman.io/podman/v6/pkg/timestamp"
 	drivers "go.podman.io/storage/drivers"
 	"go.podman.io/storage/internal/dedup"
 	"go.podman.io/storage/internal/driver"
@@ -841,6 +842,7 @@ type store struct {
 //	    return
 //	}
 func GetStore(options types.StoreOptions) (Store, error) {
+	defer timestamp.Start("GetStore()")()
 	defaultOpts, err := types.DefaultStoreOptions()
 	if err != nil {
 		return nil, err
@@ -984,6 +986,7 @@ func (s *store) GIDMap() []idtools.IDMap {
 
 // This must only be called when constructing store; it writes to fields that are assumed to be constant after construction.
 func (s *store) load() error {
+	defer timestamp.Start("store.load() " + s.graphRoot)()
 	var driver drivers.Driver
 	if err := func() error { // A scope for defer
 		s.graphLock.Lock()
@@ -1920,6 +1923,7 @@ func (s *store) imageTopLayerForMapping(image *Image, ristore roImageStore, rlst
 }
 
 func (s *store) CreateContainer(id string, names []string, image, layer, metadata string, cOptions *ContainerOptions) (*Container, error) {
+	defer timestamp.Start("store.CreateContainer")()
 	var options ContainerOptions
 	if cOptions != nil {
 		options = *cOptions
@@ -1942,6 +1946,7 @@ func (s *store) CreateContainer(id string, names []string, image, layer, metadat
 	if err != nil {
 		return nil, err
 	}
+	timestamp.Print("store.CreateContainer: layer stores ready")
 
 	var imageTopLayer *Layer
 	imageID := ""
@@ -2030,6 +2035,7 @@ func (s *store) CreateContainer(id string, names []string, image, layer, metadat
 			return nil, err
 		}
 		defer rlstore.stopWriting()
+		timestamp.Print("store.CreateContainer: layer write lock acquired")
 		if !options.HostUIDMapping && len(options.UIDMap) == 0 {
 			uidMap = s.uidMap
 		}

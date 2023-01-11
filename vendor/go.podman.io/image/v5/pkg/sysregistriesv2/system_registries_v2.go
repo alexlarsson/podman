@@ -13,6 +13,7 @@ import (
 	"github.com/sirupsen/logrus"
 	"go.podman.io/image/v5/docker/reference"
 	"go.podman.io/image/v5/types"
+	"go.podman.io/podman/v6/pkg/timestamp"
 	"go.podman.io/storage/pkg/configfile"
 	"go.podman.io/storage/pkg/fileutils"
 	"go.podman.io/storage/pkg/regexp"
@@ -867,6 +868,7 @@ func findRegistryWithParsedConfig(config *parsedConfig, ref string) (*Registry, 
 
 // loadConfigFile loads and unmarshals a single config file.
 func loadConfigFile(item *configfile.Item) (*parsedConfig, error) {
+	defer timestamp.Start("Loading registries configuration " + item.Name)()
 	// tomlConfig allows us to unmarshal either V1 or V2 simultaneously.
 	type tomlConfig struct {
 		V2RegistriesConf

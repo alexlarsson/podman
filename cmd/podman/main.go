@@ -32,6 +32,7 @@ import (
 	"go.podman.io/podman/v6/pkg/logiface"
 	"go.podman.io/podman/v6/pkg/rootless"
 	"go.podman.io/podman/v6/pkg/terminal"
+	"go.podman.io/podman/v6/pkg/timestamp"
 	"go.podman.io/storage/pkg/reexec"
 	"golang.org/x/term"
 )
@@ -47,6 +48,8 @@ func (l logrusLogger) Debugf(format string, args ...any) {
 }
 
 func main() {
+	timestamp.Print("podman main(): " + strings.Join(os.Args, " "))
+
 	if reexec.Init() {
 		// We were invoked with a different argv[0] indicating that we
 		// had a specific job to do as a subprocess, and it's done.

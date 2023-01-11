@@ -24,6 +24,7 @@ import (
 	"github.com/vbatts/tar-split/archive/tar"
 	"github.com/vbatts/tar-split/tar/asm"
 	"github.com/vbatts/tar-split/tar/storage"
+	"go.podman.io/podman/v6/pkg/timestamp"
 	drivers "go.podman.io/storage/drivers"
 	"go.podman.io/storage/internal/tempdir"
 	"go.podman.io/storage/pkg/archive"
@@ -900,6 +901,7 @@ func (r *layerStore) mountspath() string {
 // If !lockedForWriting and this function fails, the return value indicates whether
 // retrying with lockedForWriting could succeed.
 func (r *layerStore) load(lockedForWriting bool) (bool, error) {
+	defer timestamp.Start("layerstore.load()")()
 	var modifiedLocations layerLocations
 
 	layers := []*Layer{}
@@ -1131,6 +1133,7 @@ func (r *layerStore) loadMounts() error {
 // The caller must hold r.lockfile locked for writing.
 // The caller must hold r.inProcessLock for WRITING.
 func (r *layerStore) save(saveLocations layerLocations, needsSyncfs bool) error {
+	defer timestamp.Start("layerStore.Save")()
 	r.mountsLockfile.Lock()
 	defer r.mountsLockfile.Unlock()
 	if err := r.saveLayers(saveLocations, needsSyncfs); err != nil {
@@ -1156,6 +1159,7 @@ func (r *layerStore) saveFor(modifiedLayer *Layer, needsSyncfs bool) error {
 // The caller must hold r.lockfile locked for writing.
 // The caller must hold r.inProcessLock for WRITING.
 func (r *layerStore) saveLayers(saveLocations layerLocations, needsSyncfs bool) error {
+	defer timestamp.Start("layerStore.saveLayers")()
 	if !r.lockfile.IsReadWrite() {
 		return fmt.Errorf("not allowed to modify the layer store at %q: %w", r.layerdir, ErrStoreIsReadOnly)
 	}
@@ -1222,6 +1226,7 @@ func (r *layerStore) saveLayers(saveLocations layerLocations, needsSyncfs bool) 
 // The caller must hold r.mountsLockfile for writing.
 // The caller must hold r.inProcessLock for WRITING.
 func (r *layerStore) saveMounts() error {
+	defer timestamp.Start("layerStore.saveMounts")()
 	if !r.lockfile.IsReadWrite() {
 		return fmt.Errorf("not allowed to modify the layer store at %q: %w", r.layerdir, ErrStoreIsReadOnly)
 	}
@@ -1336,6 +1341,7 @@ func (s *store) newLayerStore(rundir, layerdir, imagedir string, driver drivers.
 }
 
 func newROLayerStore(rundir string, layerdir string, driver drivers.Driver) (roLayerStore, error) {
+	defer timestamp.Start("newROLayerStore")()
 	lockfile, err := lockfile.GetROLockFile(filepath.Join(layerdir, "layers.lock"))
 	if err != nil {
 		return nil, err
@@ -1520,6 +1526,7 @@ func (r *layerStore) checkIdOrNameConflict(id string, names []string) (*Layer, e
 
 // Requires startWriting.
 func (r *layerStore) create(id string, parentLayer *Layer, names []string, mountLabel string, options map[string]string, moreOptions *LayerOptions, writeable bool, contents *layerCreationContents) (layer *Layer, size int64, err error) {
+	defer timestamp.Start(fmt.Sprintf("layerStore.create(%s)", id))()
 	if moreOptions == nil {
 		moreOptions = &LayerOptions{}
 	}

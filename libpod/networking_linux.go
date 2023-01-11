@@ -15,6 +15,7 @@ import (
 	"go.podman.io/common/pkg/netns"
 	"go.podman.io/podman/v6/libpod/define"
 	"go.podman.io/podman/v6/pkg/rootless"
+	"go.podman.io/podman/v6/pkg/timestamp"
 )
 
 // Create and configure a new network namespace for a container
@@ -81,10 +82,12 @@ func (r *Runtime) configureNetNS(ctr *Container, ctrNS string, reload bool) (sta
 
 // Create and configure a new network namespace for a container
 func (r *Runtime) createNetNS(ctr *Container) (n string, q map[string]types.StatusBlock, retErr error) {
+	defer timestamp.Start("Runtime.createNetNS()")()
 	ctrNS, err := netns.NewNS()
 	if err != nil {
 		return "", nil, fmt.Errorf("creating network namespace for container %s: %w", ctr.ID(), err)
 	}
+	timestamp.Print("Runtime.createNetNS(): namespace created")
 	defer func() {
 		if retErr != nil {
 			if err := netns.UnmountNS(ctrNS.Path()); err != nil {

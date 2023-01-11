@@ -12,6 +12,7 @@ import (
 	"go.podman.io/podman/v6/cmd/podman/registry"
 	"go.podman.io/podman/v6/libpod/define"
 	"go.podman.io/podman/v6/pkg/domain/entities"
+	"go.podman.io/podman/v6/pkg/timestamp"
 )
 
 const sizeWithUnitFormat = "(format: `<number>[<unit>]`, where unit = b (bytes), k (kibibytes), m (mebibytes), or g (gibibytes))"
@@ -31,6 +32,7 @@ func ContainerToPodOptions(containerCreate *entities.ContainerCreateOptions, pod
 
 // DefineCreateFlags declares and instantiates the container create flags
 func DefineCreateFlags(cmd *cobra.Command, cf *entities.ContainerCreateOptions, mode entities.ContainerMode) {
+	defer timestamp.Start("common.DefineCreateFlags(" + cmd.Name() + ")")()
 	createFlags := cmd.Flags()
 
 	if mode == entities.CreateMode { // regular create flags

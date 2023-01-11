@@ -9,7 +9,10 @@
 
 package libpod
 
-import "go.podman.io/common/libnetwork/pasta"
+import (
+	"go.podman.io/common/libnetwork/pasta"
+	"go.podman.io/podman/v6/pkg/timestamp"
+)
 
 func (r *Runtime) setupPasta(ctr *Container, netns string) error {
 	res, err := pasta.Setup(&pasta.SetupOptions{
@@ -21,6 +24,7 @@ func (r *Runtime) setupPasta(ctr *Container, netns string) error {
 	if err != nil {
 		return err
 	}
+	timestamp.Print("pasta.Setup(): network setup completed")
 	ctr.pastaResult = res
 	return nil
 }

@@ -52,6 +52,7 @@ import (
 	"go.podman.io/podman/v6/pkg/criu"
 	"go.podman.io/podman/v6/pkg/lookup"
 	"go.podman.io/podman/v6/pkg/rootless"
+	"go.podman.io/podman/v6/pkg/timestamp"
 	"go.podman.io/podman/v6/pkg/util"
 	"go.podman.io/podman/v6/version"
 	"go.podman.io/storage/pkg/archive"
@@ -233,6 +234,7 @@ func (c *Container) prepareCatatonitMount() (spec.Mount, error) {
 // Generate spec for a container
 // Accepts a map of the container's dependencies
 func (c *Container) generateSpec(ctx context.Context) (s *spec.Spec, cleanupFuncRet func(), err error) {
+	defer timestamp.Start("Container.generateSpec()")()
 	var safeMounts []*safeMountInfo
 	// lock the thread so that the current thread will be kept alive until the mounts are used
 	runtime.LockOSThread()
@@ -251,12 +253,14 @@ func (c *Container) generateSpec(ctx context.Context) (s *spec.Spec, cleanupFunc
 	if err := c.makeBindMounts(); err != nil {
 		return nil, nil, err
 	}
+	timestamp.Print("Container.generateSpec(): bind mounts ready")
 
 	overrides := c.getUserOverrides()
 	execUser, err := lookup.GetUserGroupInfo(c.state.Mountpoint, c.config.User, overrides)
 	if err != nil {
 		return nil, nil, err
 	}
+	timestamp.Print("Container.generateSpec(): process user resolved")
 
 	// NewFromSpec() is deprecated according to its comment
 	// however the recommended replace just causes a nil map panic
@@ -763,6 +767,7 @@ func (c *Container) generateSpec(ctx context.Context) (s *spec.Spec, cleanupFunc
 	if c.state.ExtensionStageHooks, err = c.setupOCIHooks(ctx, g.Config); err != nil {
 		return nil, nil, fmt.Errorf("setting up OCI Hooks: %w", err)
 	}
+	timestamp.Print("Container.generateSpec(): mounts and OCI hooks prepared")
 	if err := c.injectEnvSecrets(&g); err != nil {
 		return nil, nil, err
 	}
@@ -2082,6 +2087,7 @@ func (c *Container) makeBindMounts() error {
 				if err := c.createResolvConf(); err != nil {
 					return fmt.Errorf("creating resolv.conf for container %s: %w", c.ID(), err)
 				}
+				timestamp.Print("Container.makeBindMounts(): resolv.conf created")
 			}
 
 			if !c.config.UseImageHosts {
@@ -2112,6 +2118,7 @@ func (c *Container) makeBindMounts() error {
 		// If ShmDir has a value SHM is always added when we mount the container
 		c.state.BindMounts["/dev/shm"] = c.config.ShmDir
 	}
+	timestamp.Print("Container.makeBindMounts(): network files prepared")
 
 	if c.config.Passwd == nil || *c.config.Passwd {
 		newPasswd, newGroup, err := c.generatePasswdAndGroup()

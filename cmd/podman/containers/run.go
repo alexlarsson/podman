@@ -18,6 +18,7 @@ import (
 	"go.podman.io/podman/v6/pkg/rootless"
 	"go.podman.io/podman/v6/pkg/specgen"
 	"go.podman.io/podman/v6/pkg/specgenutil"
+	"go.podman.io/podman/v6/pkg/timestamp"
 	"golang.org/x/term"
 )
 
@@ -106,6 +107,7 @@ func init() {
 }
 
 func run(cmd *cobra.Command, args []string) error {
+	defer timestamp.Start("containers.run()")()
 	if err := commonFlags(cmd); err != nil {
 		return err
 	}

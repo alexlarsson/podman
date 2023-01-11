@@ -13,6 +13,7 @@ import (
 	bolt "go.etcd.io/bbolt"
 	"go.podman.io/common/libnetwork/types"
 	"go.podman.io/podman/v6/libpod/define"
+	"go.podman.io/podman/v6/pkg/timestamp"
 	"go.podman.io/storage/pkg/fileutils"
 )
 
@@ -69,6 +70,7 @@ type BoltState struct {
 
 // NewBoltState creates a new bolt-backed state database
 func NewBoltState(path string, runtime *Runtime) (*BoltState, error) {
+	defer timestamp.Start("NewBoltState(" + path + ")")()
 	logrus.Info("Using boltdb as database backend")
 	state := new(BoltState)
 	state.dbPath = path

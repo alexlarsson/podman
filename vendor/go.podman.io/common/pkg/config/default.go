@@ -14,6 +14,7 @@ import (
 	"github.com/sirupsen/logrus"
 	nettypes "go.podman.io/common/libnetwork/types"
 	"go.podman.io/common/pkg/apparmor"
+	"go.podman.io/podman/v6/pkg/timestamp"
 	"go.podman.io/storage/pkg/configfile"
 	"go.podman.io/storage/pkg/homedir"
 	"go.podman.io/storage/pkg/unshare"
@@ -196,6 +197,7 @@ const (
 // to the current host only. It does not read any config files from the host or
 // the environment.
 func defaultConfig() (*Config, error) {
+	defer timestamp.Start("defaultConfig()")()
 	defaultEngineConfig, err := defaultEngineConfig()
 	if err != nil {
 		return nil, err

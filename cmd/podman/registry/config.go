@@ -12,6 +12,7 @@ import (
 	"go.podman.io/common/pkg/config"
 	"go.podman.io/podman/v6/pkg/domain/entities"
 	"go.podman.io/podman/v6/pkg/rootless"
+	"go.podman.io/podman/v6/pkg/timestamp"
 	"go.podman.io/podman/v6/pkg/util"
 	"go.podman.io/storage/pkg/fileutils"
 )
@@ -79,6 +80,7 @@ func containersConfModules() ([]string, error) {
 }
 
 func newPodmanConfig() {
+	finish := timestamp.Start("registry.newPodmanConfig()")
 	modules, err := containersConfModules()
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "Error parsing containers.conf modules: %v\n", err)
@@ -123,12 +125,14 @@ func newPodmanConfig() {
 	}
 
 	podmanOptions = entities.PodmanConfig{ContainersConf: &config.Config{}, ContainersConfDefaultsRO: defaultConfig, EngineMode: mode}
+	finish()
 }
 
 // setXdgDirs ensures the XDG_RUNTIME_DIR env and XDG_CONFIG_HOME variables are set.
 // containers/image uses XDG_RUNTIME_DIR to locate the auth file, XDG_CONFIG_HOME is
 // use for the containers.conf configuration file.
 func setXdgDirs() error {
+	defer timestamp.Start("registry.setXdgDirs()")()
 	if !rootless.IsRootless() {
 		return nil
 	}

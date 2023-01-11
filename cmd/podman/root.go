@@ -27,6 +27,7 @@ import (
 	"go.podman.io/podman/v6/pkg/checkpoint/crutils"
 	"go.podman.io/podman/v6/pkg/domain/entities"
 	"go.podman.io/podman/v6/pkg/parallel"
+	"go.podman.io/podman/v6/pkg/timestamp"
 	"go.podman.io/podman/v6/version"
 	"go.podman.io/storage"
 	"sigs.k8s.io/yaml"
@@ -165,6 +166,7 @@ func Execute() {
 		}
 	}
 
+	timestamp.Print("exiting podman")
 	os.Exit(registry.GetExitCode())
 }
 
@@ -613,6 +615,9 @@ func rootFlags(cmd *cobra.Command, podmanConfig *entities.PodmanConfig) {
 		pFlags.StringVar(&podmanConfig.CPUProfile, "cpu-profile", "", "Path for the cpu-profiling results")
 		pFlags.StringVar(&podmanConfig.MemoryProfile, "memory-profile", "", "Path for the memory-profiling results")
 
+		dummy := false
+		pFlags.BoolVar(&dummy, "timestamps", false, "enable timestamps")
+
 		conmonFlagName := "conmon"
 		pFlags.StringVar(&podmanConfig.ConmonPath, conmonFlagName, "", "Path of the conmon binary")
 		_ = cmd.RegisterFlagCompletionFunc(conmonFlagName, completion.AutocompleteDefault)
@@ -694,6 +699,7 @@ func rootFlags(cmd *cobra.Command, podmanConfig *entities.PodmanConfig) {
 			"memory-profile",
 			"pull-option",
 			"registries-conf",
+			"timestamps",
 			"trace",
 		} {
 			if err := pFlags.MarkHidden(f); err != nil {

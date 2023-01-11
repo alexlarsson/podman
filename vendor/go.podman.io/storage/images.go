@@ -11,6 +11,7 @@ import (
 
 	digest "github.com/opencontainers/go-digest"
 	"github.com/sirupsen/logrus"
+	"go.podman.io/podman/v6/pkg/timestamp"
 	"go.podman.io/storage/pkg/ioutils"
 	"go.podman.io/storage/pkg/lockfile"
 	"go.podman.io/storage/pkg/stringid"
@@ -501,6 +502,7 @@ func (i *Image) recomputeDigests() error {
 // If !lockedForWriting and this function fails, the return value indicates whether
 // retrying with lockedForWriting could succeed.
 func (r *imageStore) load(lockedForWriting bool) (bool, error) {
+	defer timestamp.Start("imageStore.load()")()
 	rpath := r.imagespath()
 	data, err := os.ReadFile(rpath)
 	if err != nil && !os.IsNotExist(err) {

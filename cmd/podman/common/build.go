@@ -32,6 +32,7 @@ import (
 	"go.podman.io/podman/v6/cmd/podman/utils"
 	"go.podman.io/podman/v6/pkg/domain/entities"
 	"go.podman.io/podman/v6/pkg/env"
+	"go.podman.io/podman/v6/pkg/timestamp"
 )
 
 // BuildFlagsWrapper are local to cmd/ as the build code is using Buildah-internal
@@ -60,6 +61,7 @@ var FarmBuildHiddenFlags = []string{
 }
 
 func DefineBuildFlags(cmd *cobra.Command, buildOpts *BuildFlagsWrapper, isFarmBuild bool) {
+	finish := timestamp.Start("common.DefineBuildFlags(" + cmd.Name() + ")")
 	flags := cmd.Flags()
 
 	// buildx build --load ignored, but added for compliance
@@ -140,6 +142,7 @@ func DefineBuildFlags(cmd *cobra.Command, buildOpts *BuildFlagsWrapper, isFarmBu
 			_ = flags.MarkHidden(f)
 		}
 	}
+	finish()
 }
 
 func ParseBuildOpts(cmd *cobra.Command, args []string, buildOpts *BuildFlagsWrapper) (*entities.BuildOptions, error) {

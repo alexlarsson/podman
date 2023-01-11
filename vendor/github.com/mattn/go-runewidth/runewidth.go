@@ -7,6 +7,7 @@ import (
 	"unicode/utf8"
 
 	"github.com/clipperhouse/uax29/v2/graphemes"
+	"go.podman.io/podman/v6/pkg/timestamp"
 )
 
 //go:generate go run script/generate.go
@@ -42,6 +43,7 @@ var (
 )
 
 func init() {
+	defer timestamp.Start("runewidth.init()")()
 	zerowidth = mergeIntervals(combining, nonprint)
 	widewidth = mergeIntervals(ambiguous, doublewidth)
 	eastAsianWidth = makeWidthTable(zerowidth, widewidth)
@@ -243,6 +245,7 @@ func runeWidthEastAsianNoCache(r rune, strictEmojiNeutral bool) int {
 }
 
 func initStrictWidthLUT() {
+	defer timestamp.Start("runewidth.initStrictWidthLUT()")()
 	for i := range strictWidthLUT[0] {
 		r := rune(i)
 		strictWidthLUT[0][i] = byte(runeWidthNoLUT(r, false, true))

@@ -16,6 +16,7 @@ import (
 	"go.podman.io/podman/v6/libpod/define"
 	"go.podman.io/podman/v6/libpod/events"
 	"go.podman.io/podman/v6/pkg/domain/entities"
+	"go.podman.io/podman/v6/pkg/timestamp"
 	"go.podman.io/storage/pkg/archive"
 	"golang.org/x/sys/unix"
 )
@@ -172,6 +173,7 @@ func (c *Container) Update(updateOptions *entities.ContainerUpdateOptions) error
 // ordering of the two such that no output from the container is lost (e.g. the
 // Attach call occurs before Start).
 func (c *Container) Attach(ctx context.Context, streams *define.AttachStreams, keys string, resize <-chan resize.TerminalSize, start bool) (retChan <-chan error, finalErr error) {
+	defer timestamp.Start("Container.Attach")()
 	if !c.batched {
 		c.lock.Lock()
 		defer c.lock.Unlock()
@@ -608,6 +610,7 @@ func (c *Container) Wait(ctx context.Context) (int32, error) {
 // If the argument is less than or equal to 0 Nanoseconds a default interval is
 // used.
 func (c *Container) WaitForExit(ctx context.Context, pollInterval time.Duration) (int32, error) {
+	defer timestamp.Start(fmt.Sprintf("WaitForExit w/ interval %s", pollInterval))()
 	id := c.ID()
 	if !c.valid {
 		// if the container is not valid at this point as it was deleted,
@@ -716,6 +719,7 @@ func waitForConmonExit(ctx context.Context, conmonPID, conmonPidFd int, pollInte
 			}
 			return err
 		}
+		timestamp.Print(fmt.Sprintf("waitForConmonExit Sleep(%d)", pollInterval))
 		select {
 		case <-ctx.Done():
 			return define.ErrCanceled

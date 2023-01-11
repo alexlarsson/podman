@@ -9,6 +9,7 @@ import (
 	"sync"
 
 	"github.com/sirupsen/logrus"
+	"go.podman.io/podman/v6/pkg/timestamp"
 	cfg "go.podman.io/storage/pkg/config"
 	"go.podman.io/storage/pkg/configfile"
 	"go.podman.io/storage/pkg/homedir"
@@ -133,6 +134,7 @@ type LoadOptions struct {
 // On each call all files will be parsed again, to only get the correct system defaults
 // and have them cached consider using [DefaultStoreOptions] instead.
 func LoadStoreOptions(opts LoadOptions) (StoreOptions, error) {
+	defer timestamp.Start("LoadStoreOptions()")()
 	config := new(TomlConfig)
 
 	rootlessUID := unshare.GetRootlessUID()

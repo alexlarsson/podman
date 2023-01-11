@@ -15,6 +15,7 @@ import (
 
 	"github.com/opencontainers/cgroups"
 	"github.com/sirupsen/logrus"
+	"go.podman.io/podman/v6/pkg/timestamp"
 	"golang.org/x/sys/unix"
 )
 
@@ -242,6 +243,7 @@ func MoveUnderCgroup(cgroup, subtree string, processes []uint32) error {
 		if err := os.MkdirAll(newCgroup, 0o755); err != nil && !os.IsExist(err) {
 			return err
 		}
+		timestamp.Print("cgroups.MoveUnderCgroup: subtree created")
 
 		f, err := os.OpenFile(filepath.Join(newCgroup, "cgroup.procs"), os.O_RDWR, 0o755)
 		if err != nil {
@@ -260,6 +262,7 @@ func MoveUnderCgroup(cgroup, subtree string, processes []uint32) error {
 			if err != nil {
 				return err
 			}
+			timestamp.Print("cgroups.MoveUnderCgroup: process list read")
 			for pid := range bytes.SplitSeq(processesData, []byte("\n")) {
 				if len(pid) == 0 {
 					continue

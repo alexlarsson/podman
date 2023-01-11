@@ -25,6 +25,7 @@ import (
 	storageTransport "go.podman.io/image/v5/storage"
 	"go.podman.io/image/v5/transports/alltransports"
 	"go.podman.io/image/v5/types"
+	"go.podman.io/podman/v6/pkg/timestamp"
 	"go.podman.io/storage"
 )
 
@@ -56,6 +57,7 @@ type PullOptions struct {
 //
 // WARNING: the Digest field of the returned image might not be a value relevant to the user issuing the pull.
 func (r *Runtime) Pull(ctx context.Context, name string, pullPolicy config.PullPolicy, options *PullOptions) (_ []*Image, pullError error) {
+	defer timestamp.Start(fmt.Sprintf("libimage.Pull(%s)", name))()
 	logrus.Debugf("Pulling image %s (policy: %s)", name, pullPolicy)
 	if r.eventChannel != nil {
 		defer func() {
@@ -415,6 +417,7 @@ func (r *Runtime) copyFromDockerArchiveReaderReference(ctx context.Context, read
 //
 // If options.All is set, all tags from the specified registry will be pulled.
 func (r *Runtime) copyFromRegistry(ctx context.Context, ref types.ImageReference, inputName string, pullPolicy config.PullPolicy, options *PullOptions) ([]*Image, error) {
+	defer timestamp.Start("libimage.copyFromRegistry()")()
 	// Sanity check.
 	if err := pullPolicy.Validate(); err != nil {
 		return nil, err

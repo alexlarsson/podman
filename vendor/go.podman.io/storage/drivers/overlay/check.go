@@ -11,6 +11,7 @@ import (
 	"syscall"
 
 	"github.com/sirupsen/logrus"
+	"go.podman.io/podman/v6/pkg/timestamp"
 	"go.podman.io/storage/pkg/archive"
 	"go.podman.io/storage/pkg/idmap"
 	"go.podman.io/storage/pkg/idtools"
@@ -26,6 +27,7 @@ import (
 // directory or the kernel enable CONFIG_OVERLAY_FS_REDIRECT_DIR.
 // When these exist naive diff should be used.
 func doesSupportNativeDiff(d, mountOpts string) error {
+	defer timestamp.Start("overlay.doesSupportNativeDiff()")()
 	td, err := os.MkdirTemp(d, "opaque-bug-check")
 	if err != nil {
 		return err
@@ -71,13 +73,17 @@ func doesSupportNativeDiff(d, mountOpts string) error {
 	if data != "" {
 		opts = fmt.Sprintf("%s,%s", opts, data)
 	}
+	timestamp.Print("overlay.doesSupportNativeDiff(): mounting test filesystem")
 	if err := unix.Mount("overlay", filepath.Join(td, "merged"), "overlay", uintptr(flags), opts); err != nil {
 		return fmt.Errorf("failed to mount overlay: %w", err)
 	}
+	timestamp.Print("overlay.doesSupportNativeDiff(): test mount ready")
 	defer func() {
+		timestamp.Print("overlay.doesSupportNativeDiff(): unmounting test mount")
 		if err := unix.Unmount(filepath.Join(td, "merged"), 0); err != nil {
 			logrus.Warnf("Failed to unmount check directory %v: %v", filepath.Join(td, "merged"), err)
 		}
+		timestamp.Print("overlay.doesSupportNativeDiff(): test unmount returned")
 	}()
 
 	// Touch file in d to force copy up of opaque directory "d" from "l2" to "l3"
@@ -120,6 +126,7 @@ func doesSupportNativeDiff(d, mountOpts string) error {
 // copying up a file from a lower layer unless/until its contents are being
 // modified
 func doesMetacopy(d, mountOpts string) (bool, error) {
+	defer timestamp.Start("overlay.doesMetacopy()")()
 	td, err := os.MkdirTemp(d, "metacopy-check")
 	if err != nil {
 		return false, err
@@ -162,10 +169,13 @@ func doesMetacopy(d, mountOpts string) (bool, error) {
 		}
 		return false, fmt.Errorf("failed to mount overlay for metacopy check with %q options: %w", mountOpts, err)
 	}
+	timestamp.Print("overlay.doesMetacopy(): test mount ready")
 	defer func() {
+		timestamp.Print("overlay.doesMetacopy(): unmounting test mount")
 		if err := unix.Unmount(filepath.Join(td, "merged"), 0); err != nil {
 			logrus.Warnf("Failed to unmount check directory %v: %v", filepath.Join(td, "merged"), err)
 		}
+		timestamp.Print("overlay.doesMetacopy(): test unmount returned")
 	}()
 	// Make a change that only impacts the inode, and check if the pulled-up copy is marked
 	// as a metadata-only copy
@@ -226,6 +236,7 @@ func doesVolatile(d string) (bool, error) {
 // supportsIdmappedLowerLayers checks if the kernel supports mounting overlay on top of
 // a idmapped lower layer.
 func supportsIdmappedLowerLayers(home string) (bool, error) {
+	defer timestamp.Start("overlay.supportsIdmappedLowerLayers()")()
 	layerDir, err := os.MkdirTemp(home, "compat")
 	if err != nil {
 		return false, err
@@ -258,11 +269,17 @@ func supportsIdmappedLowerLayers(home string) (bool, error) {
 	if err != nil {
 		return false, err
 	}
-	defer cleanupFunc()
+	timestamp.Print("overlay.supportsIdmappedLowerLayers(): user namespace created")
+	defer func() {
+		timestamp.Print("overlay.supportsIdmappedLowerLayers(): removing user namespace")
+		cleanupFunc()
+		timestamp.Print("overlay.supportsIdmappedLowerLayers(): user namespace cleanup completed")
+	}()
 
 	if err := idmap.CreateIDMappedMount(lowerDir, lowerMappedDir, pid); err != nil {
 		return false, fmt.Errorf("create mapped mount: %w", err)
 	}
+	timestamp.Print("overlay.supportsIdmappedLowerLayers(): idmapped bind mount ready")
 	defer func() {
 		if err := unix.Unmount(lowerMappedDir, unix.MNT_DETACH); err != nil {
 			logrus.Warnf("Unmount %q: %v", lowerMappedDir, err)
@@ -274,6 +291,7 @@ func supportsIdmappedLowerLayers(home string) (bool, error) {
 	if err := unix.Mount("overlay", mergedDir, "overlay", flags, opts); err != nil {
 		return false, err
 	}
+	timestamp.Print("overlay.supportsIdmappedLowerLayers(): overlay test mount ready")
 	defer func() {
 		_ = unix.Unmount(mergedDir, unix.MNT_DETACH)
 	}()

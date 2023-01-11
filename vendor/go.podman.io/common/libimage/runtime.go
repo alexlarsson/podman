@@ -21,6 +21,7 @@ import (
 	storageTransport "go.podman.io/image/v5/storage"
 	"go.podman.io/image/v5/transports/alltransports"
 	"go.podman.io/image/v5/types"
+	"go.podman.io/podman/v6/pkg/timestamp"
 	"go.podman.io/storage"
 )
 
@@ -222,6 +223,7 @@ var errNoHexValue = errors.New("invalid format: no 64-byte hexadecimal value")
 // If the specified name uses the `containers-storage` transport, the resolved
 // name is empty.
 func (r *Runtime) LookupImage(name string, options *LookupImageOptions) (*Image, string, error) {
+	defer timestamp.Start(fmt.Sprintf("libimage.LookupImage(%s)", name))()
 	logrus.Debugf("Looking up image %q in local containers storage", name)
 
 	if options == nil {

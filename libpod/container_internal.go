@@ -46,6 +46,7 @@ import (
 	"go.podman.io/podman/v6/pkg/lookup"
 	"go.podman.io/podman/v6/pkg/rootless"
 	"go.podman.io/podman/v6/pkg/systemd/notifyproxy"
+	"go.podman.io/podman/v6/pkg/timestamp"
 	"go.podman.io/podman/v6/pkg/util"
 	"go.podman.io/storage"
 	"go.podman.io/storage/pkg/chrootarchive"
@@ -448,6 +449,7 @@ func (c *Container) setupStorageMapping(dest, from *storage.IDMappingOptions) {
 
 // Create container root filesystem for use
 func (c *Container) setupStorage(ctx context.Context) error {
+	defer timestamp.Start("Container.setupStorage()")()
 	if !c.valid {
 		return fmt.Errorf("container %s is not valid: %w", c.ID(), define.ErrCtrRemoved)
 	}
@@ -817,6 +819,7 @@ func (c *Container) save() error {
 // If recursive is true, each of the container's dependencies will be started.
 // Otherwise, this function will return with error if there are dependencies of this container that aren't running.
 func (c *Container) prepareToStart(ctx context.Context, recursive bool) (retErr error) {
+	defer timestamp.Start("Container.prepareToStart()")()
 	// Container must be created or stopped to be started
 	if !c.ensureState(define.ContainerStateConfigured, define.ContainerStateCreated, define.ContainerStateStopped, define.ContainerStateExited) {
 		// Special case: Let the caller know that container is already running,
@@ -851,6 +854,7 @@ func (c *Container) prepareToStart(ctx context.Context, recursive bool) (retErr 
 
 	if c.state.State == define.ContainerStateStopped {
 		// Reinitialize the container if we need to
+		timestamp.Print("Container.prepareToStart() - reinit")
 		if err := c.reinit(ctx, false); err != nil {
 			return err
 		}
@@ -991,6 +995,7 @@ func (c *Container) checkDependenciesRunning() ([]string, error) {
 }
 
 func (c *Container) completeNetworkSetup() error {
+	defer timestamp.Start("Container.completeNetworkSetup()")()
 	netDisabled, err := c.NetworkDisabled()
 	if err != nil {
 		return err
@@ -1023,6 +1028,7 @@ func (c *Container) completeNetworkSetup() error {
 
 // Initialize a container, creating it in the runtime
 func (c *Container) init(ctx context.Context, retainRetries bool) error {
+	defer timestamp.Start("Container.init()")()
 	// Unconditionally remove conmon temporary files.
 	// We've been running into far too many issues where they block startup.
 	if err := c.removeConmonFiles(); err != nil {
@@ -1045,6 +1051,7 @@ func (c *Container) init(ctx context.Context, retainRetries bool) error {
 	if err := c.saveSpec(newSpec); err != nil {
 		return err
 	}
+	timestamp.Print("Container.init(): OCI specification saved")
 
 	for _, v := range c.config.NamedVolumes {
 		if err := c.fixVolumePermissions(v); err != nil {
@@ -1692,6 +1699,7 @@ func (c *Container) restartWithTimeout(ctx context.Context, timeout uint) (retEr
 // TODO: Can we use this for export? Copying SHM into the export might not be
 // good
 func (c *Container) mountStorage() (_ string, deferredErr error) {
+	defer timestamp.Start("Container.mountStorage()")()
 	var err error
 	// Container already mounted, nothing to do
 	if c.state.Mounted {
@@ -2318,6 +2326,7 @@ func (c *Container) delete(ctx context.Context) error {
 	if err := c.ociRuntime.DeleteContainer(c); err != nil {
 		return fmt.Errorf("removing container %s from runtime: %w", c.ID(), err)
 	}
+	timestamp.Print("Container.delete(): OCI runtime delete completed")
 
 	if err := c.postDeleteHooks(ctx); err != nil {
 		return fmt.Errorf("container %s poststop hooks: %w", c.ID(), err)

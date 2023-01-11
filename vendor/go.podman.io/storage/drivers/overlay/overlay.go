@@ -24,6 +24,7 @@ import (
 	"github.com/opencontainers/selinux/go-selinux"
 	"github.com/opencontainers/selinux/go-selinux/label"
 	"github.com/sirupsen/logrus"
+	"go.podman.io/podman/v6/pkg/timestamp"
 	graphdriver "go.podman.io/storage/drivers"
 	"go.podman.io/storage/drivers/overlayutils"
 	"go.podman.io/storage/drivers/quota"
@@ -323,6 +324,7 @@ func isNetworkFileSystem(fsMagic graphdriver.FsMagic) bool {
 // If overlay filesystem is not supported on the host, a wrapped graphdriver.ErrNotSupported is returned as error.
 // If an overlay filesystem is not supported over an existing filesystem then a wrapped graphdriver.ErrIncompatibleFS is returned.
 func Init(home string, options graphdriver.Options) (graphdriver.Driver, error) {
+	defer timestamp.Start("overlay.Init()")()
 	opts, err := parseOptions(options.DriverOptions)
 	if err != nil {
 		return nil, err
@@ -719,7 +721,9 @@ func SupportsNativeOverlay(home, runhome string) (bool, error) {
 }
 
 func supportsOverlay(home string, rootIDPair idtools.IDPair) (supportsDType bool, err error) {
+	defer timestamp.Start("overlay.supportsOverlay()")()
 	selinuxLabelTest := selinux.PrivContainerMountLabel()
+	timestamp.Print("overlay.supportsOverlay(): SELinux mount label ready")
 
 	logLevel := logrus.ErrorLevel
 	if unshare.IsRootless() {
@@ -758,6 +762,7 @@ func supportsOverlay(home string, rootIDPair idtools.IDPair) (supportsDType bool
 			// can be empty or not even there, and the home might
 			// legitimately be not empty
 			_ = unix.Unmount(mergedDir, unix.MNT_DETACH)
+			timestamp.Print("overlay.supportsOverlay(): test unmount returned")
 			_ = os.RemoveAll(layerDir)
 			_ = os.Remove(home)
 		}()
@@ -790,7 +795,9 @@ func supportsOverlay(home string, rootIDPair idtools.IDPair) (supportsDType bool
 		}
 
 		if len(flags) < unix.Getpagesize() {
+			timestamp.Print("overlay.supportsOverlay(): mounting test filesystem")
 			err := unix.Mount("overlay", mergedDir, "overlay", 0, flags)
+			timestamp.Print("overlay.supportsOverlay(): test mount completed")
 			if err == nil {
 				if err = os.RemoveAll(mergedSubdir); err != nil {
 					logrus.StandardLogger().Logf(logLevel, "overlay: removing an item from the merged directory failed: %v", err)
@@ -1464,6 +1471,7 @@ func (d *Driver) Get(id string, options graphdriver.MountOpts) (string, error) {
 }
 
 func (d *Driver) get(id string, disableShifting bool, options graphdriver.MountOpts) (_ string, retErr error) {
+	defer timestamp.Start("overlay driver get(" + id + ")")()
 	dir, _, inAdditionalStore := d.dir2(id, false)
 	if err := fileutils.Exists(dir); err != nil {
 		return "", err
@@ -1804,6 +1812,8 @@ func (d *Driver) get(id string, disableShifting bool, options graphdriver.MountO
 	mountTarget := mergedDir
 
 	pageSize := unix.Getpagesize()
+
+	timestamp.Print("Mounting overlayfs")
 
 	if d.options.mountProgram != "" {
 		mountFunc = func(source string, target string, mType string, flags uintptr, label string) error {

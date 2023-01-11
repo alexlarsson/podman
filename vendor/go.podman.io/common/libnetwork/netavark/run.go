@@ -14,6 +14,7 @@ import (
 	"go.podman.io/common/libnetwork/pasta"
 	"go.podman.io/common/libnetwork/types"
 	"go.podman.io/common/pkg/config"
+	"go.podman.io/podman/v6/pkg/timestamp"
 )
 
 type netavarkOptions struct {
@@ -74,6 +75,7 @@ func validatePerNetworkOpts(network *types.Network, netOpts *types.PerNetworkOpt
 func (n *netavarkNetwork) Setup(namespacePath string, options types.SetupOptions) (_ map[string]types.StatusBlock, retErr error) {
 	n.lock.Lock()
 	defer n.lock.Unlock()
+	timestamp.Print("netavark.Setup: network lock acquired")
 	err := n.loadNetworks()
 	if err != nil {
 		return nil, err
@@ -89,6 +91,7 @@ func (n *netavarkNetwork) Setup(namespacePath string, options types.SetupOptions
 	if err != nil {
 		return nil, err
 	}
+	timestamp.Print("netavark.Setup: IP addresses allocated")
 	defer func() {
 		// In case the setup failed for whatever reason podman will not start the
 		// container so we must free the allocated ips again to not leak them.

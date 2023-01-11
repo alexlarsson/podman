@@ -23,6 +23,7 @@ import (
 	"go.podman.io/common/pkg/systemd"
 	"go.podman.io/podman/v6/pkg/errorhandling"
 	"go.podman.io/podman/v6/pkg/rootless"
+	"go.podman.io/podman/v6/pkg/timestamp"
 	pmount "go.podman.io/storage/pkg/mount"
 	"golang.org/x/sys/unix"
 )
@@ -172,6 +173,7 @@ func createUnitName(prefix string, name string) string {
 // moveConmonToCgroupAndSignal gets a container's cgroupParent and moves the conmon process to that cgroup
 // it then signals for conmon to start by sending nonce data down the start fd
 func (r *ConmonOCIRuntime) moveConmonToCgroupAndSignal(ctr *Container, cmd *exec.Cmd, startFd *os.File) error {
+	defer timestamp.Start("ConmonOCIRuntime.moveConmonToCgroupAndSignal")()
 	mustCreateCgroup := !ctr.config.NoCgroups
 
 	// If cgroup creation is disabled - just signal.
@@ -390,5 +392,6 @@ func GetLimits(resource *spec.LinuxResources) (runcconfig.Resources, error) {
 }
 
 func moveToRuntimeCgroup() error {
+	defer timestamp.Start("moveToRuntimeCgroup()")()
 	return cgroups.MoveUnderCgroupSubtree("runtime")
 }

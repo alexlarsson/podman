@@ -23,6 +23,7 @@ import (
 	"go.podman.io/podman/v6/pkg/domain/entities"
 	"go.podman.io/podman/v6/pkg/specgen"
 	"go.podman.io/podman/v6/pkg/specgenutil"
+	"go.podman.io/podman/v6/pkg/timestamp"
 	"go.podman.io/podman/v6/pkg/util"
 	"golang.org/x/term"
 )
@@ -342,6 +343,7 @@ func CreateInit(c *cobra.Command, vals entities.ContainerCreateOptions, isInfra 
 
 // Pulls image if any also parses and populates OS, Arch and Variant in specified container create options
 func pullImage(cmd *cobra.Command, imageName string, cliVals *entities.ContainerCreateOptions) (string, error) {
+	defer timestamp.Start("PullImage()")()
 	pullPolicy, err := config.ParsePullPolicy(cliVals.Pull)
 	if err != nil {
 		return "", err

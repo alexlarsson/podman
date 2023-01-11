@@ -39,6 +39,7 @@ import (
 	"go.podman.io/podman/v6/pkg/domain/entities/reports"
 	"go.podman.io/podman/v6/pkg/rootless"
 	"go.podman.io/podman/v6/pkg/systemd"
+	"go.podman.io/podman/v6/pkg/timestamp"
 	"go.podman.io/podman/v6/pkg/util"
 	"go.podman.io/storage"
 	"go.podman.io/storage/pkg/fileutils"
@@ -180,6 +181,7 @@ func NewRuntime(ctx context.Context, options ...RuntimeOption) (*Runtime, error)
 }
 
 func newRuntimeFromConfig(ctx context.Context, conf *config.Config, options ...RuntimeOption) (*Runtime, error) {
+	defer timestamp.Start("newRuntimeFromConfig()")()
 	runtime := new(Runtime)
 
 	if conf.Engine.OCIRuntime == "" {
@@ -327,12 +329,14 @@ func getDBState(runtime *Runtime) (State, error) {
 // Make a new runtime based on the given configuration
 // Sets up containers/storage, state store, OCI runtime
 func makeRuntime(ctx context.Context, runtime *Runtime) (retErr error) {
+	defer timestamp.Start("runtime.makeRuntime()")()
 	// Find a working conmon binary
 	cPath, err := runtime.config.FindConmon()
 	if err != nil {
 		return err
 	}
 	runtime.conmonPath = cPath
+	timestamp.Print("runtime.makeRuntime()- conmon is: " + cPath)
 
 	if runtime.config.Engine.StaticDir == "" {
 		runtime.config.Engine.StaticDir = filepath.Join(runtime.storageConfig.GraphRoot, "libpod")
@@ -825,6 +829,7 @@ func (r *Runtime) Shutdown(force bool) error {
 	if !r.valid {
 		return nil
 	}
+	defer timestamp.Start("Runtime.Shutdown()")()
 
 	if r.workerChannel != nil {
 		r.workerGroup.Wait()

@@ -18,6 +18,7 @@ import (
 	"go.podman.io/podman/v6/libpod/events"
 	"go.podman.io/podman/v6/pkg/namespaces"
 	"go.podman.io/podman/v6/pkg/rootless"
+	"go.podman.io/podman/v6/pkg/timestamp"
 	"go.podman.io/storage/pkg/lockfile"
 )
 
@@ -86,6 +87,7 @@ func networkNamesFromOpts(nets []types.NamedPerNetworkOptions) []string {
 // setUpNetwork will set up the networks, on error it will also tear down the
 // networks. If rootless it will join/create the rootless network namespace.
 func (r *Runtime) setUpNetwork(ns string, opts types.NetworkOptions) (map[string]types.StatusBlock, error) {
+	defer timestamp.Start("Runtime.setUpNetwork(): network backend")()
 	return r.network.Setup(ns, types.SetupOptions{NetworkOptions: opts})
 }
 
