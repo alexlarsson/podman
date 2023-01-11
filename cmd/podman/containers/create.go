@@ -25,6 +25,8 @@ import (
 	"golang.org/x/term"
 )
 
+import "github.com/containers/podman/v4/pkg/timestamp"
+
 var (
 	createDescription = `Creates a new container from the given image or storage and prepares it for running the specified command.
 
@@ -309,6 +311,8 @@ func CreateInit(c *cobra.Command, vals entities.ContainerCreateOptions, isInfra 
 
 // Pulls image if any also parses and populates OS, Arch and Variant in specified container create options
 func PullImage(imageName string, cliVals *entities.ContainerCreateOptions) (string, error) {
+	timestamp.Print(">PullImage())")
+	defer timestamp.Print("<PullImage()")
 	pullPolicy, err := config.ParsePullPolicy(cliVals.Pull)
 	if err != nil {
 		return "", err

@@ -32,9 +32,13 @@ import (
 	"golang.org/x/term"
 )
 
+import "github.com/containers/podman/v4/pkg/timestamp"
+
 var containerConfig *config.Config
 
 func init() {
+	timestamp.Print(">init() - pkg.Util")
+	timestamp.Print("<init() - pkg.Util")
 	var err error
 	containerConfig, err = config.Default()
 	if err != nil {

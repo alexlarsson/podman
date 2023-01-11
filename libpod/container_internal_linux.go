@@ -27,6 +27,8 @@ import (
 	"golang.org/x/sys/unix"
 )
 
+import "github.com/containers/podman/v4/pkg/timestamp"
+
 var (
 	bindOptions = []string{"bind", "rprivate"}
 )
@@ -53,6 +55,8 @@ func (c *Container) unmountSHM(mount string) error {
 // prepare mounts the container and sets up other required resources like net
 // namespaces
 func (c *Container) prepare() error {
+	timestamp.Print(">Container.prepare()")
+	defer timestamp.Print("<Container.prepare()")
 	var (
 		wg                              sync.WaitGroup
 		netNS                           string
@@ -101,7 +105,9 @@ func (c *Container) prepare() error {
 		logrus.Debugf("Created root filesystem for container %s at %s", c.ID(), c.state.Mountpoint)
 	}()
 
+	timestamp.Print("Container.prepare() - wait for mount/network setup")
 	wg.Wait()
+	timestamp.Print("Container.prepare() - mount/network setup done")
 
 	var createErr error
 	if createNetNSErr != nil {

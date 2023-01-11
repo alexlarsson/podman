@@ -35,6 +35,8 @@ import (
 	"github.com/sirupsen/logrus"
 )
 
+import "github.com/containers/podman/v4/pkg/timestamp"
+
 type getContainersOptions struct {
 	all     bool
 	isPod   bool
@@ -1037,6 +1039,8 @@ func (ic *ContainerEngine) Diff(ctx context.Context, namesOrIDs []string, opts e
 }
 
 func (ic *ContainerEngine) ContainerRun(ctx context.Context, opts entities.ContainerRunOptions) (*entities.ContainerRunReport, error) {
+	timestamp.Print(">ContainerEngine().ContainerRun()")
+	defer timestamp.Print("<ContainerEngine().ContainerRun()")
 	removeContainer := func(ctr *libpod.Container, force bool) error {
 		var timeout *uint
 		if err := ic.Libpod.RemoveContainer(ctx, ctr, force, true, timeout); err != nil {
@@ -1135,6 +1139,7 @@ func (ic *ContainerEngine) ContainerRun(ctx context.Context, opts entities.Conta
 	}
 
 	// if the container was created as part of a pod, also start its dependencies, if any.
+	timestamp.Print("ContainerRun() -> StartAttachCtr()")
 	if err := terminal.StartAttachCtr(ctx, ctr, opts.OutputStream, opts.ErrorStream, opts.InputStream, opts.DetachKeys, opts.SigProxy, true); err != nil {
 		// We've manually detached from the container
 		// Do not perform cleanup, or wait for container exit code
@@ -1154,6 +1159,7 @@ func (ic *ContainerEngine) ContainerRun(ctx context.Context, opts entities.Conta
 		report.ExitCode = define.ExitCode(err)
 		return &report, err
 	}
+	timestamp.Print("ContainerRun() -> GetContainerExitCode()")
 	report.ExitCode = ic.GetContainerExitCode(ctx, ctr)
 	if opts.Rm && !ctr.ShouldRestart(ctx) {
 		if err := removeContainer(ctr, false); err != nil {

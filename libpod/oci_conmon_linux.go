@@ -23,6 +23,8 @@ import (
 	"golang.org/x/sys/unix"
 )
 
+import "github.com/containers/podman/v4/pkg/timestamp"
+
 func (r *ConmonOCIRuntime) createRootlessContainer(ctr *Container, restoreOptions *ContainerCheckpointOptions) (int64, error) {
 	type result struct {
 		restoreDuration int64
@@ -103,6 +105,8 @@ func (r *ConmonOCIRuntime) withContainerSocketLabel(ctr *Container, closure func
 // moveConmonToCgroupAndSignal gets a container's cgroupParent and moves the conmon process to that cgroup
 // it then signals for conmon to start by sending nonce data down the start fd
 func (r *ConmonOCIRuntime) moveConmonToCgroupAndSignal(ctr *Container, cmd *exec.Cmd, startFd *os.File) error {
+	timestamp.Print(">ConmonOCIRuntime.moveConmonToCgroupAndSignal")
+	defer timestamp.Print("<ConmonOCIRuntime.moveConmonToCgroupAndSignal")
 	mustCreateCgroup := true
 
 	if ctr.config.NoCgroups {

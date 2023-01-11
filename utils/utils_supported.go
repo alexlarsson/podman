@@ -19,8 +19,12 @@ import (
 	"github.com/sirupsen/logrus"
 )
 
+import "github.com/containers/podman/v4/pkg/timestamp"
+
 // RunUnderSystemdScope adds the specified pid to a systemd scope
 func RunUnderSystemdScope(pid int, slice string, unitName string) error {
+	timestamp.Print(">RunUnderSystemdScope")
+	defer timestamp.Print("<RunUnderSystemdScope")
 	var properties []systemdDbus.Property
 	var conn *systemdDbus.Conn
 	var err error

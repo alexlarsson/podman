@@ -40,6 +40,8 @@ import (
 	"golang.org/x/sys/unix"
 )
 
+import "github.com/containers/podman/v4/pkg/timestamp"
+
 const (
 	// This is Conmon's STDIO_BUF_SIZE. I don't believe we have access to it
 	// directly from the Go code, so const it here
@@ -740,6 +742,7 @@ func openControlFile(ctr *Container, parentDir string) (*os.File, error) {
 		if !isRetryable(err) {
 			return nil, fmt.Errorf("could not open ctl file for terminal resize for container %s: %w", ctr.ID(), err)
 		}
+		timestamp.Print(fmt.Sprintf("openControlFile Sleep 100msec"))
 		time.Sleep(time.Second / 10)
 	}
 	return nil, fmt.Errorf("timeout waiting for %q", controlPath)
@@ -948,6 +951,7 @@ func makeAccessible(path string, uid, gid int) error {
 
 // Wait for a container which has been sent a signal to stop
 func waitContainerStop(ctr *Container, timeout time.Duration) error {
+	timestamp.Print("waitContainerStop")
 	return waitPidStop(ctr.state.PID, timeout)
 }
 
@@ -965,6 +969,7 @@ func waitPidStop(pid int, timeout time.Duration) error {
 				}
 				logrus.Errorf("Pinging PID %d with signal 0: %v", pid, err)
 			}
+			timestamp.Print("waitPidStop sleep 10msec")
 			time.Sleep(10 * time.Millisecond)
 		}
 	}
@@ -994,6 +999,8 @@ func (r *ConmonOCIRuntime) getLogTag(ctr *Container) (string, error) {
 
 // createOCIContainer generates this container's main conmon instance and prepares it for starting
 func (r *ConmonOCIRuntime) createOCIContainer(ctr *Container, restoreOptions *ContainerCheckpointOptions) (int64, error) {
+	timestamp.Print(">ConmonOCIRuntime.createOCIContainer()")
+	defer timestamp.Print("<ConmonOCIRuntime.createOCIContainer()")
 	var stderrBuf bytes.Buffer
 
 	runtimeDir, err := util.GetRuntimeDir()
@@ -1208,6 +1215,7 @@ func (r *ConmonOCIRuntime) createOCIContainer(ctr *Container, restoreOptions *Co
 	if restoreOptions != nil {
 		runtimeRestoreStarted = time.Now()
 	}
+	timestamp.Print("Starting conmon")
 	err = startCommand(cmd, ctr)
 
 	// regardless of whether we errored or not, we no longer need the children pipes
@@ -1216,15 +1224,18 @@ func (r *ConmonOCIRuntime) createOCIContainer(ctr *Container, restoreOptions *Co
 	if err != nil {
 		return 0, err
 	}
+	timestamp.Print("Move conmon to cgroup")
 	if err := r.moveConmonToCgroupAndSignal(ctr, cmd, parentStartPipe); err != nil {
 		return 0, err
 	}
 	/* Wait for initial setup and fork, and reap child */
+	timestamp.Print("Wait for conmon initial process exit")
 	err = cmd.Wait()
 	if err != nil {
 		return 0, err
 	}
 
+	timestamp.Print("Waiting for container pid info from conmon")
 	pid, err := readConmonPipeData(r.name, parentSyncPipe, ociLog)
 	if err != nil {
 		if err2 := r.DeleteContainer(ctr); err2 != nil {
@@ -1233,6 +1244,7 @@ func (r *ConmonOCIRuntime) createOCIContainer(ctr *Container, restoreOptions *Co
 		return 0, err
 	}
 	ctr.state.PID = pid
+	timestamp.Print(fmt.Sprintf("Got container pid info from conmon, pid=%d", pid))
 
 	conmonPID, err := readConmonPidFile(ctr.config.ConmonPidFile)
 	if err != nil {
@@ -1242,6 +1254,7 @@ func (r *ConmonOCIRuntime) createOCIContainer(ctr *Container, restoreOptions *Co
 		logrus.Infof("Got Conmon PID as %d", conmonPID)
 		ctr.state.ConmonPID = conmonPID
 	}
+	timestamp.Print("Read conmon pid file")
 
 	runtimeRestoreDuration := func() int64 {
 		if restoreOptions != nil && restoreOptions.PrintStats {
@@ -1485,6 +1498,8 @@ func readConmonPipeData(runtimeName string, pipe *os.File, ociLog string) (int, 
 
 // writeConmonPipeData writes nonce data to a pipe
 func writeConmonPipeData(pipe *os.File) error {
+	timestamp.Print(">ConmonOCIRuntime.writeConmonPipeData")
+	defer timestamp.Print("<ConmonOCIRuntime.writeConmonPipeData")
 	someData := []byte{0}
 	_, err := pipe.Write(someData)
 	return err
@@ -1501,6 +1516,7 @@ func formatRuntimeOpts(opts ...string) []string {
 
 // getConmonVersion returns a string representation of the conmon version.
 func (r *ConmonOCIRuntime) getConmonVersion() (string, error) {
+	timestamp.Print("Starting conmon --version")
 	output, err := utils.ExecCmd(r.conmonPath, "--version")
 	if err != nil {
 		return "", err
@@ -1511,6 +1527,7 @@ func (r *ConmonOCIRuntime) getConmonVersion() (string, error) {
 // getOCIRuntimeVersion returns a string representation of the OCI runtime's
 // version.
 func (r *ConmonOCIRuntime) getOCIRuntimeVersion() (string, error) {
+	timestamp.Print("Starting " + r.path + " --version")
 	output, err := utils.ExecCmd(r.path, "--version")
 	if err != nil {
 		return "", err

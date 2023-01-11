@@ -57,6 +57,8 @@ import (
 	"github.com/sirupsen/logrus"
 )
 
+import "github.com/containers/podman/v4/pkg/timestamp"
+
 func parseOptionIDs(option string) ([]idtools.IDMap, error) {
 	ranges := strings.Split(option, "#")
 	ret := make([]idtools.IDMap, len(ranges))
@@ -151,6 +153,8 @@ func getOverlayUpperAndWorkDir(options []string) (string, string, error) {
 // Generate spec for a container
 // Accepts a map of the container's dependencies
 func (c *Container) generateSpec(ctx context.Context) (*spec.Spec, error) {
+	timestamp.Print(">Container.generateSpec()")
+	defer timestamp.Print("<Container.generateSpec()")
 	overrides := c.getUserOverrides()
 	execUser, err := lookup.GetUserGroupInfo(c.state.Mountpoint, c.config.User, overrides)
 	if err != nil {

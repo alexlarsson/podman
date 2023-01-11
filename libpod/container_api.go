@@ -20,6 +20,8 @@ import (
 	"golang.org/x/sys/unix"
 )
 
+import "github.com/containers/podman/v4/pkg/timestamp"
+
 // Init creates a container in the OCI runtime, moving a container from
 // ContainerStateConfigured, ContainerStateStopped, or ContainerStateExited to
 // ContainerStateCreated. Once in Created state, Conmon will be running, which
@@ -132,6 +134,8 @@ func (c *Container) Update(res *spec.LinuxResources) error {
 // In overall functionality, it is identical to the Start call, with the added
 // side effect that an attach session will also be started.
 func (c *Container) StartAndAttach(ctx context.Context, streams *define.AttachStreams, keys string, resize <-chan resize.TerminalSize, recursive bool) (retChan <-chan error, finalErr error) {
+	timestamp.Print(">Container.StartAttach")
+	defer timestamp.Print("<Container.StartAttach")
 	defer func() {
 		if finalErr != nil {
 			// Have to re-lock.
@@ -566,6 +570,8 @@ func (c *Container) Wait(ctx context.Context) (int32, error) {
 // WaitForExit blocks until the container exits and returns its exit code. The
 // argument is the interval at which checks the container's status.
 func (c *Container) WaitForExit(ctx context.Context, pollInterval time.Duration) (int32, error) {
+	timestamp.Print(fmt.Sprintf(">WaitForExit w/ interval %s", pollInterval))
+	defer timestamp.Print("<WaitForExit")
 	if !c.valid {
 		return -1, define.ErrCtrRemoved
 	}
@@ -657,6 +663,7 @@ func (c *Container) WaitForExit(ctx context.Context, pollInterval time.Duration)
 				_, _ = unix.Poll(fds, int(pollInterval.Milliseconds()))
 				conmonPidFdTriggered = true
 			} else {
+				timestamp.Print(fmt.Sprintf("Container.WaitForExit Sleep(%d)", pollInterval))
 				time.Sleep(pollInterval)
 			}
 		}

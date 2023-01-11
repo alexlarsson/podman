@@ -1,11 +1,14 @@
 package ioutils
 
 import (
+	"fmt"
 	"io"
 	"os"
 	"path/filepath"
 	"time"
 )
+
+import "github.com/containers/podman/v4/pkg/timestamp"
 
 // AtomicFileWriterOptions specifies options for creating the atomic file writer.
 type AtomicFileWriterOptions struct {
@@ -66,6 +69,8 @@ func NewAtomicFileWriter(filename string, perm os.FileMode) (io.WriteCloser, err
 
 // AtomicWriteFile atomically writes data to a file named by filename.
 func AtomicWriteFileWithOpts(filename string, data []byte, perm os.FileMode, opts *AtomicFileWriterOptions) error {
+	timestamp.Print(fmt.Sprintf(">AtomicWriteFile %s: %d bytes", filename, len(data)))
+	defer timestamp.Print("<AtomicWriteFile " + filename)
 	f, err := newAtomicFileWriter(filename, perm, opts)
 	if err != nil {
 		return err
@@ -195,7 +200,9 @@ func (w syncFileCloser) Close() error {
 	if !defaultWriterOptions.NoSync {
 		return w.File.Close()
 	}
+	timestamp.Print("syncFileCloser >fdatasync()")
 	err := fdatasync(w.File)
+	timestamp.Print("syncFileCloser <fdatasync()")
 	if err1 := w.File.Close(); err == nil {
 		err = err1
 	}

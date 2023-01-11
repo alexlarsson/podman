@@ -9,6 +9,8 @@ import (
 	"sync"
 )
 
+import "github.com/containers/podman/v4/pkg/timestamp"
+
 var (
 	systemBus     *Conn
 	systemBusLck  sync.Mutex
@@ -69,6 +71,7 @@ func SessionBus() (conn *Conn, err error) {
 			sessionBus = conn
 		}
 	}()
+	timestamp.Print("Initializing shared session bus")
 	conn, err = ConnectSessionBus()
 	return
 }
@@ -128,6 +131,7 @@ func SystemBus() (conn *Conn, err error) {
 			systemBus = conn
 		}
 	}()
+	timestamp.Print("Initializing shared system bus")
 	conn, err = ConnectSystemBus()
 	return
 }
@@ -182,6 +186,7 @@ func SystemBusPrivateHandler(handler Handler, signalHandler SignalHandler) (*Con
 
 // Dial establishes a new private connection to the message bus specified by address.
 func Dial(address string, opts ...ConnOption) (*Conn, error) {
+	timestamp.Print("Connecting to dbus address " + address)
 	tr, err := getTransport(address)
 	if err != nil {
 		return nil, err
